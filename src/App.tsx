@@ -142,10 +142,10 @@ export default function App() {
           <div className="site-container">
             <div className="section-heading">
               <p className="eyebrow">Menu</p>
-              <h2>Ask for today's rate before ordering.</h2>
+              <h2>Choose the cut you need.</h2>
               <p>
-                Rates can change through the day. Pick a cut, send the WhatsApp message,
-                and we will confirm availability before payment.
+                Send the cut and quantity on WhatsApp. We will confirm today's rate,
+                availability, and payment amount before the order is packed.
               </p>
             </div>
 
@@ -259,8 +259,7 @@ export default function App() {
               <p className="eyebrow">Visit or order</p>
               <h2>Find us at Sabji Market, Fuljhore.</h2>
               <p>
-                Address: {siteData.address}. Call before coming, or send a WhatsApp
-                message for today's fresh cuts.
+                Call before coming, or send a WhatsApp message for today's fresh cuts.
               </p>
               <div className="location-actions">
                 <a className="primary-cta compact" href={buildWhatsappLink(generalOrderMessage)}>
@@ -379,47 +378,24 @@ export default function App() {
 
       <footer className="site-footer">
         <div className="site-container footer-inner">
-          <div className="footer-brand">
+          <a className="footer-brand" href="#main-content" aria-label={`${siteData.shopName} home`}>
             <img src={logoUrl} alt="" className="footer-logo" width="48" height="48" />
-            <p>{siteData.shopName}</p>
-            <span className="footer-bengali">{siteData.shopNameBengali}</span>
-            <span>{siteData.address}</span>
-            <span className="footer-note">{siteData.footer.note}</span>
-            <span className="footer-note footer-note-bengali">{siteData.footer.noteBengali}</span>
-          </div>
+            <span className="footer-brand-copy">
+              <span className="footer-brand-name">{siteData.shopName}</span>
+              <span className="footer-bengali">{siteData.shopNameBengali}</span>
+            </span>
+          </a>
 
-          <div className="footer-meta">
-            <div>
-              <p className="footer-label">Open daily</p>
-              <span>{siteData.timing}</span>
-            </div>
-            <div>
-              <p className="footer-label">Best for</p>
-              <span>Rate checks, cut requests, and nearby home orders.</span>
-            </div>
-          </div>
+          <span className="footer-locality">Sabji Market, Fuljhore</span>
 
-          <div className="footer-contact">
-            <div className="footer-actions">
-              <a className="footer-action secondary" href={callLink}>
-                <Phone size={18} />
-                {siteData.phone}
-              </a>
-              <a className="footer-action primary" href={buildWhatsappLink(generalOrderMessage)}>
-                <MessageCircle size={18} />
-                Order on WhatsApp
-              </a>
-            </div>
-
-            <div className="footer-links">
-              <a href="#menu">Cuts</a>
-              <a href="#payment">Payment</a>
-              <a href="#location">Location</a>
-              <a href={siteData.googleProfileUrl} target="_blank" rel="noreferrer">
-                Google listing
-              </a>
-            </div>
-          </div>
+          <nav className="footer-links" aria-label="Footer">
+            <a href="#menu">Cuts</a>
+            <a href="#payment">Payment</a>
+            <a href="#location">Location</a>
+            <a href={siteData.googleProfileUrl} target="_blank" rel="noreferrer">
+              Google listing
+            </a>
+          </nav>
         </div>
       </footer>
 

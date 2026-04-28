@@ -89,8 +89,8 @@ export const siteData = {
   ],
   orderSteps: [
     {
-      title: "Ask today's rate",
-      body: "Send the cut and quantity on WhatsApp. We will reply with rate and availability.",
+      title: "Send cut and quantity",
+      body: "Tell us what you need on WhatsApp. We will reply with rate and availability.",
     },
     {
       title: "We cut and pack",
@@ -105,7 +105,7 @@ export const siteData = {
     eyebrow: "Questions / প্রশ্ন",
     title: "Quick answers in English and Bengali.",
     subtitle:
-      "Start here for rates, cut size, payment timing, and bigger family or party orders.",
+      "Start here for cut size, payment timing, and bigger family or party orders.",
     helpTitle: "Need a faster answer?",
     helpBody:
       "Call for the quickest reply. WhatsApp is best when you want to mention the cut, weight, and delivery area together.",
@@ -154,8 +154,4 @@ export const siteData = {
         "হ্যাঁ। পার্টি বা বড় অর্ডারের জন্য সম্ভব হলে অন্তত এক দিন আগে কল বা WhatsApp করুন।",
     },
   ],
-  footer: {
-    note: "Ask today's rate before you pay.",
-    noteBengali: "পেমেন্টের আগে আজকের রেট জেনে নিন।",
-  },
 };
