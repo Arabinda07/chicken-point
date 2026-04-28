@@ -223,18 +223,41 @@ export default function App() {
         <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center"></div>
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
           <h2 className="text-3xl sm:text-4xl font-bold font-serif italic mb-16 text-orange-400">Order in 3 Simple Steps</h2>
-          <div className="grid sm:grid-cols-3 gap-8 sm:gap-12 relative">
-            <div className="hidden sm:block absolute top-8 left-[20%] right-[20%] h-0.5 bg-gray-800 -z-10"></div>
-            {siteData.steps.map((step) => (
-              <div key={step.step} className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-gray-800 border-2 border-orange-500 rounded-full flex items-center justify-center font-bold text-2xl mb-6 shadow-xl shadow-orange-900/50">
-                  {step.step}
-                </div>
-                <h3 className="font-bold text-xl mb-3 text-white">{step.title}</h3>
-                <p className="text-gray-400 max-w-xs">{step.description}</p>
-              </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid sm:grid-cols-3 gap-8 sm:gap-12 relative"
+          >
+            <motion.div 
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+              className="hidden sm:block absolute top-8 left-[16.6%] right-[16.6%] h-0.5 bg-gray-800 -z-10 origin-left"
+            ></motion.div>
+            {siteData.steps.map((step, index) => (
+              <motion.div 
+                key={step.step} 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ type: "spring", stiffness: 100, damping: 20, delay: index * 0.15 }}
+                className="flex flex-col items-center group cursor-pointer"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-16 h-16 bg-gray-800 border-2 border-orange-500 rounded-full flex items-center justify-center font-bold text-2xl mb-6 shadow-xl shadow-orange-900/50 group-hover:bg-orange-500 group-hover:border-orange-400 group-hover:text-white transition-all duration-300 relative z-10"
+                >
+                  <div className="absolute inset-0 rounded-full bg-orange-500 blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300"></div>
+                  <span className="relative z-10">{step.step}</span>
+                </motion.div>
+                <h3 className="font-bold text-xl mb-3 text-white group-hover:text-orange-400 transition-colors duration-300">{step.title}</h3>
+                <p className="text-gray-400 max-w-xs transition-colors group-hover:text-gray-300">{step.description}</p>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           <div className="mt-16">
             <a href={whatsappLink} className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-full font-bold text-lg hover:bg-[#20bd5a] transition shadow-lg shadow-green-900/50">
               <MessageCircle size={24} /> Start Your Order Now
