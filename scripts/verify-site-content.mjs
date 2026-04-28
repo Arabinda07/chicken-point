@@ -21,6 +21,8 @@ assert.match(app, /assets\/Shop_GoogleQR\.png/, 'Google review QR png is not use
 assert.match(app, /siteData\.googleProfileUrl/, 'Google profile link should be exposed near the QR');
 assert.match(app, /<main\b/, 'page must expose a main landmark');
 assert.match(app, /aria-expanded=/, 'FAQ buttons need aria-expanded');
+assert.match(app, /questionBengali/, 'FAQ section should render Bengali question text');
+assert.match(app, /answerBengali/, 'FAQ section should render Bengali answer text');
 assert.match(app, /title="Bikash Chicken Point location map"/, 'map iframe needs a descriptive title');
 assert.match(app, /Pay after we confirm your order/i, 'payment flow must say to pay after confirmation');
 assert.match(app, /today.s rate/i, 'menu CTAs must ask for today rates');
@@ -32,12 +34,15 @@ assert.match(data, /endHour:\s*21/, 'closing hour should match 9:00 PM listing')
 assert.match(data, /googleProfileUrl:\s*["']https:\/\/share\.google\/B1iUixv7uA7BVarqb["']/, 'Google profile URL should use the provided share link');
 assert.match(data, /Whole chicken/i, 'revised menu should include whole chicken');
 assert.match(data, /Liver|Gizzard/i, 'revised menu should include liver/gizzard');
+assert.match(data, /questionBengali/i, 'FAQ data should include Bengali questions');
+assert.match(data, /answerBengali/i, 'FAQ data should include Bengali answers');
 assert.doesNotMatch(data, /price:\s*["']₹/, 'menu data should not expose fixed rupee prices');
 
 assert.match(css, /Anek Bangla/, 'heading font should use Anek Bangla');
 assert.match(css, /Hind Siliguri/, 'body font should use Hind Siliguri');
 assert.match(css, /object-fit:\s*contain/, 'Google QR should be displayed fully, not cropped');
 assert.match(css, /oklch\(/, 'visual tokens should use OKLCH colors');
+assert.match(css, /prefers-color-scheme:\s*dark/, 'CSS should include dark mode support');
 assert.match(css, /prefers-reduced-motion/, 'CSS should include reduced-motion handling');
 
 assert.match(readme, /Bikash Chicken Point/, 'README should describe the storefront');

@@ -101,26 +101,61 @@ export const siteData = {
       body: "Use UPI only after we confirm the final amount and delivery time.",
     },
   ],
+  faqSection: {
+    eyebrow: "Questions / প্রশ্ন",
+    title: "Quick answers in English and Bengali.",
+    subtitle:
+      "Start here for rates, cut size, payment timing, and bigger family or party orders.",
+    helpTitle: "Need a faster answer?",
+    helpBody:
+      "Call for the quickest reply. WhatsApp is best when you want to mention the cut, weight, and delivery area together.",
+    helpBodyBengali:
+      "খুব তাড়াতাড়ি উত্তর চাইলে কল করুন। কাট, ওজন আর ডেলিভারির জায়গা একসাথে জানাতে চাইলে WhatsApp সবচেয়ে সুবিধাজনক।",
+  },
   faqs: [
     {
+      id: "rates",
+      tag: "Rate check",
       question: "Do you show fixed prices on the site?",
+      questionBengali: "ওয়েবসাইটে কি ঠিক দাম লেখা থাকে?",
       answer:
         "No. Chicken rates can change, so please ask for today's rate on WhatsApp before ordering.",
+      answerBengali:
+        "না। চিকেনের রেট বদলাতে পারে, তাই অর্ডার করার আগে আজকের রেট WhatsApp-এ জেনে নিন।",
     },
     {
+      id: "cut-size",
+      tag: "Cut style",
       question: "Can I choose the cut size?",
+      questionBengali: "আমি কি কাটের সাইজ বেছে নিতে পারি?",
       answer:
         "Yes. Tell us if you want small curry pieces, medium pieces, or a special cut for fry or biryani.",
+      answerBengali:
+        "হ্যাঁ। ছোট কারি কাট, মাঝারি পিস, বা ফ্রাই কিংবা বিরিয়ানির জন্য আলাদা কাট চাইলে বলে দিন।",
     },
     {
+      id: "payment",
+      tag: "Payment",
       question: "When should I pay?",
+      questionBengali: "কখন পেমেন্ট করব?",
       answer:
         "Please pay only after we confirm the order, rate, and delivery timing.",
+      answerBengali:
+        "অর্ডার, রেট আর ডেলিভারির সময় নিশ্চিত করার পরেই পেমেন্ট করুন।",
     },
     {
+      id: "bulk-order",
+      tag: "Bulk order",
       question: "Do you take bulk orders?",
+      questionBengali: "বড় অর্ডার নেন?",
       answer:
         "Yes. For parties or larger orders, call or WhatsApp us at least one day before if possible.",
+      answerBengali:
+        "হ্যাঁ। পার্টি বা বড় অর্ডারের জন্য সম্ভব হলে অন্তত এক দিন আগে কল বা WhatsApp করুন।",
     },
   ],
+  footer: {
+    note: "Ask today's rate before you pay.",
+    noteBengali: "পেমেন্টের আগে আজকের রেট জেনে নিন।",
+  },
 };

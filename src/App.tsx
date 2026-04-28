@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   Banknote,
   CheckCircle2,
-  ChevronDown,
   Clock,
   ExternalLink,
   MapPin,
@@ -35,7 +34,7 @@ function buildWhatsappLink(message: string) {
 }
 
 export default function App() {
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState(0);
 
   const callLink = `tel:${siteData.phone.replace(/\s+/g, '')}`;
   const isOpenNow = useMemo(() => {
@@ -290,47 +289,89 @@ export default function App() {
         </section>
 
         <section className="section-block faq-section">
-          <div className="site-container faq-grid">
-            <div className="section-heading align-left">
-              <p className="eyebrow">Questions</p>
-              <h2>Before you order</h2>
-              <p>
-                Quick answers about rates, cut sizes, payment, and party orders.
-              </p>
+          <div className="site-container faq-shell">
+            <div className="section-heading align-left faq-heading">
+              <p className="eyebrow">{siteData.faqSection.eyebrow}</p>
+              <h2>{siteData.faqSection.title}</h2>
+              <p>{siteData.faqSection.subtitle}</p>
             </div>
 
-            <div className="faq-list">
-              {siteData.faqs.map((faq, index) => {
-                const isOpen = openFaq === index;
-                const panelId = `faq-panel-${index}`;
-                const buttonId = `faq-button-${index}`;
+            <div className="faq-grid">
+              <div className="faq-list" aria-label="Common customer questions">
+                {siteData.faqs.map((faq, index) => {
+                  const isOpen = openFaq === index;
+                  const panelId = `faq-panel-${faq.id}`;
+                  const buttonId = `faq-button-${faq.id}`;
 
-                return (
-                  <article className="faq-item" key={faq.question}>
-                    <h3>
-                      <button
-                        id={buttonId}
-                        type="button"
-                        aria-expanded={isOpen}
-                        aria-controls={panelId}
-                        onClick={() => setOpenFaq(isOpen ? null : index)}
-                      >
-                        <span>{faq.question}</span>
-                        <ChevronDown size={20} aria-hidden="true" />
-                      </button>
-                    </h3>
-                    <div
-                      id={panelId}
-                      role="region"
-                      aria-labelledby={buttonId}
-                      className="faq-answer"
-                      hidden={!isOpen}
+                  return (
+                    <button
+                      id={buttonId}
+                      key={faq.id}
+                      type="button"
+                      className={`faq-trigger ${isOpen ? 'is-active' : ''}`}
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      onClick={() => setOpenFaq(index)}
                     >
-                      <p>{faq.answer}</p>
-                    </div>
-                  </article>
-                );
-              })}
+                      <span className="faq-trigger-copy">
+                        <span className="faq-trigger-title">{faq.question}</span>
+                        <span className="faq-trigger-bengali">{faq.questionBengali}</span>
+                      </span>
+                      <span className="faq-trigger-tag">{faq.tag}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="faq-panels">
+                {siteData.faqs.map((faq, index) => {
+                  const isOpen = openFaq === index;
+                  const panelId = `faq-panel-${faq.id}`;
+                  const buttonId = `faq-button-${faq.id}`;
+                  const faqMessage =
+                    `Hi ${siteData.shopName}, I have a question about "${faq.question}". ` +
+                    `Please help with today's rate / order details.`;
+
+                  return (
+                    <article className="faq-panel" key={faq.id} hidden={!isOpen}>
+                      <div id={panelId} role="region" aria-labelledby={buttonId}>
+                        <div className="faq-panel-body">
+                          <div className="faq-answer-card">
+                            <p className="faq-answer-label">English</p>
+                            <h3>{faq.question}</h3>
+                            <p>{faq.answer}</p>
+                          </div>
+
+                          <div className="faq-answer-card is-bengali">
+                            <p className="faq-answer-label">বাংলা</p>
+                            <h3>{faq.questionBengali}</h3>
+                            <p>{faq.answerBengali}</p>
+                          </div>
+                        </div>
+
+                        <div className="faq-help">
+                          <div className="faq-help-copy">
+                            <p className="faq-help-title">{siteData.faqSection.helpTitle}</p>
+                            <p>{siteData.faqSection.helpBody}</p>
+                            <p className="faq-help-bengali">{siteData.faqSection.helpBodyBengali}</p>
+                          </div>
+
+                          <div className="faq-help-actions">
+                            <a className="plain-link" href={callLink}>
+                              <Phone size={18} />
+                              Call now
+                            </a>
+                            <a className="primary-cta compact" href={buildWhatsappLink(faqMessage)}>
+                              <MessageCircle size={19} />
+                              Ask on WhatsApp
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
@@ -338,14 +379,46 @@ export default function App() {
 
       <footer className="site-footer">
         <div className="site-container footer-inner">
-          <div>
+          <div className="footer-brand">
             <img src={logoUrl} alt="" className="footer-logo" width="48" height="48" />
             <p>{siteData.shopName}</p>
+            <span className="footer-bengali">{siteData.shopNameBengali}</span>
             <span>{siteData.address}</span>
+            <span className="footer-note">{siteData.footer.note}</span>
+            <span className="footer-note footer-note-bengali">{siteData.footer.noteBengali}</span>
           </div>
+
+          <div className="footer-meta">
+            <div>
+              <p className="footer-label">Open daily</p>
+              <span>{siteData.timing}</span>
+            </div>
+            <div>
+              <p className="footer-label">Best for</p>
+              <span>Rate checks, cut requests, and nearby home orders.</span>
+            </div>
+          </div>
+
           <div className="footer-contact">
-            <a href={callLink}>{siteData.phone}</a>
-            <a href={buildWhatsappLink(generalOrderMessage)}>Order on WhatsApp</a>
+            <div className="footer-actions">
+              <a className="footer-action secondary" href={callLink}>
+                <Phone size={18} />
+                {siteData.phone}
+              </a>
+              <a className="footer-action primary" href={buildWhatsappLink(generalOrderMessage)}>
+                <MessageCircle size={18} />
+                Order on WhatsApp
+              </a>
+            </div>
+
+            <div className="footer-links">
+              <a href="#menu">Cuts</a>
+              <a href="#payment">Payment</a>
+              <a href="#location">Location</a>
+              <a href={siteData.googleProfileUrl} target="_blank" rel="noreferrer">
+                Google listing
+              </a>
+            </div>
           </div>
         </div>
       </footer>
