@@ -1,20 +1,41 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Bikash Chicken Point storefront
 
-# Run and deploy your AI Studio app
+A small Vite + React storefront for Bikash Chicken Point at Sabji Market, Fuljhore, Durgapur-713206, West Bengal.
 
-This contains everything you need to run your app locally.
+The site helps local customers:
 
-View your app in AI Studio: https://ai.studio/apps/4888158d-2405-4515-92ba-56d4260abf3a
+- call or WhatsApp the shop,
+- ask for today's chicken rate before ordering,
+- scan the UPI QR after order confirmation,
+- find the shop on Google Maps,
+- open the Google Business Profile QR/poster.
 
-## Run Locally
+Public listing link: https://share.google/B1iUixv7uA7BVarqb
 
-**Prerequisites:**  Node.js
-
+## Local setup
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+
+   ```bash
+   npm install
+   ```
+
+2. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+3. Check the site contract, TypeScript, and production build:
+
+   ```bash
+   npm test
+   npm run lint
+   npm run build
+   ```
+
+## Assets
+
+The live payment QR is `assets/QR1.png`, converted from `assets/QR1.pdf`.
+The Google Business Profile poster is `assets/Shop_GoogleQR.png`, converted from `assets/Shop_GoogleQR.pdf`.
+The shop logo is `assets/logo.jpeg`.
