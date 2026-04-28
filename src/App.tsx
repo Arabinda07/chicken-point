@@ -294,6 +294,9 @@ export default function App() {
             <div className="section-heading align-left">
               <p className="eyebrow">Questions</p>
               <h2>Before you order</h2>
+              <p>
+                Quick answers about rates, cut sizes, payment, and party orders.
+              </p>
             </div>
 
             <div className="faq-list">

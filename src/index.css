@@ -418,6 +418,8 @@ h1 {
 
 .section-heading.align-left {
   margin-inline: 0;
+  align-self: start;
+  align-content: start;
   justify-items: start;
   text-align: left;
 }
@@ -658,6 +660,13 @@ h1 {
 .faq-grid {
   display: grid;
   gap: var(--space-xl);
+  align-items: start;
+}
+
+.faq-section .section-heading {
+  max-width: 28rem;
+  margin-bottom: 0;
+  gap: var(--space-lg);
 }
 
 .faq-list {
@@ -700,6 +709,10 @@ h1 {
 
 .faq-answer {
   padding: 0 var(--space-lg) var(--space-lg);
+}
+
+.faq-answer p {
+  max-width: 58ch;
 }
 
 .site-footer {
@@ -806,8 +819,7 @@ h1 {
 
   .hero-grid,
   .order-grid,
-  .location-grid,
-  .faq-grid {
+  .location-grid {
     grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.82fr);
   }
 
@@ -832,6 +844,18 @@ h1 {
   .location-grid h2,
   .qr-copy h2 {
     font-size: 3rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .faq-grid {
+    grid-template-columns: minmax(16rem, 0.58fr) minmax(0, 1fr);
+    gap: clamp(var(--space-2xl), 6vw, 5rem);
+  }
+
+  .faq-list {
+    width: 100%;
+    justify-self: end;
   }
 }
 
