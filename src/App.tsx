@@ -185,7 +185,7 @@ function Storefront() {
     async function fetchProducts() {
       if (!isSupabaseConfigured) {
         setIsLoadingProducts(false);
-        setProductError('Live prices need Supabase env keys. Showing starter rates for now.');
+        setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
         return;
       }
 
@@ -201,7 +201,7 @@ function Storefront() {
       setIsLoadingProducts(false);
 
       if (error) {
-        setProductError('Live prices did not load. Showing saved starter rates.');
+        setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
         return;
       }
 
@@ -248,7 +248,7 @@ function Storefront() {
     }
 
     if (!isSupabaseConfigured) {
-      setBookingError('Supabase is not configured yet. Please call or WhatsApp the shop.');
+      setBookingError('Online pre-booking is paused. Please call or WhatsApp the shop.');
       return;
     }
 
@@ -303,7 +303,11 @@ function Storefront() {
     }
 
     if (!isSupabaseConfigured) {
-      setLoyalty((current) => ({...current, totalKg: 0, error: 'Supabase is not configured yet.'}));
+      setLoyalty((current) => ({
+        ...current,
+        totalKg: 0,
+        error: 'Loyalty check is paused. Ask at the counter with this phone number.',
+      }));
       return;
     }
 
@@ -431,7 +435,7 @@ function Storefront() {
               <p className="eyebrow">Live Menu / আজকের রেট</p>
               <h2>Choose the cut you need.</h2>
               <p>
-                Prices come from the shop admin page. Pick weight, cut style, and time before you leave.
+                Counter rates are updated by the shop. Pick weight, cut style, and time before you leave.
               </p>
             </div>
 
@@ -703,19 +707,24 @@ function B2BSection({products}: {products: Product[]}) {
           <h2>{siteData.b2b.title}</h2>
           <p>{siteData.b2b.body}</p>
           <p className="bengali-name">{siteData.b2b.bodyBengali}</p>
-          <p className="udyam-line">
-            <FileText size={18} />
-            UDYAM Registration Number: <strong>{siteData.udyamRegistrationNumber}</strong>
+          <div className="b2b-action-row">
+            <p className="udyam-line">
+              <FileText size={18} />
+              UDYAM: <strong>{siteData.udyamRegistrationNumber}</strong>
+            </p>
+            <button className="primary-cta compact" type="button" onClick={() => window.print()}>
+              <Download size={18} />
+              Download Rate Card
+            </button>
+          </div>
+          <p className="invoice-note">
+            Tick <strong>{siteData.booking.invoiceLabel}</strong> while pre-booking.
           </p>
-          <button className="primary-cta compact" type="button" onClick={() => window.print()}>
-            <Download size={18} />
-            Download Rate Card
-          </button>
         </div>
 
         <div className="rate-card" aria-label="Current B2B rate card">
           <div>
-            <h3>{siteData.shopName}</h3>
+            <h3>Rate card / রেট কার্ড</h3>
             <p>Current pickup counter rates</p>
           </div>
           <ul>
@@ -1040,7 +1049,7 @@ function AdminApp() {
     setAuthError('');
 
     if (!isSupabaseConfigured) {
-      setAuthError('Supabase env keys are missing.');
+      setAuthError('Owner login is not ready on this device.');
       return;
     }
 

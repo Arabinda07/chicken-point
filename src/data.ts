@@ -116,7 +116,7 @@ export const siteData = {
       question: 'Do prices update on the site?',
       questionBengali: 'ওয়েবসাইটে কি দাম আপডেট হয়?',
       answer:
-        'Yes. The owner can update the daily rate from the admin page. Please still confirm at the counter before payment.',
+        'Yes. The shop updates the daily rate when prices change. Please still confirm at the counter before payment.',
       answerBengali:
         'হ্যাঁ। দোকান থেকে প্রতিদিনের রেট আপডেট করা যাবে। পেমেন্টের আগে কাউন্টারে একবার নিশ্চিত করুন।',
     },
