@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useMemo, useState} from 'react';
+import {FormEvent, MouseEvent, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Banknote,
   BriefcaseBusiness,
@@ -9,6 +9,7 @@ import {
   FileText,
   Loader2,
   LogOut,
+  Menu,
   MapPin,
   MessageCircle,
   Phone,
@@ -66,6 +67,25 @@ type AdminProductDraft = Product & {
   draftPrice: string;
   saveState?: 'idle' | 'saving' | 'saved' | 'error';
 };
+
+type PublicPath = '/' | '/menu' | '/bulk-loyalty' | '/visit-help';
+
+type NavItem = {
+  href: PublicPath | '/admin';
+  label: string;
+};
+
+type NavigateTo = (path: PublicPath) => void;
+
+const publicPaths: PublicPath[] = ['/', '/menu', '/bulk-loyalty', '/visit-help'];
+
+const navItems: NavItem[] = [
+  {href: '/', label: 'Home'},
+  {href: '/menu', label: 'Menu'},
+  {href: '/bulk-loyalty', label: 'Bulk & Loyalty'},
+  {href: '/visit-help', label: 'Visit & Help'},
+  {href: '/admin', label: 'Admin'},
+];
 
 const defaultBookingForm: BookingFormState = {
   customerName: '',
@@ -143,17 +163,43 @@ function normalizeProducts(products: Product[]) {
     .sort((a, b) => a.display_order - b.display_order);
 }
 
+function normalizePublicPath(pathname: string): PublicPath {
+  return publicPaths.includes(pathname as PublicPath) ? (pathname as PublicPath) : '/';
+}
+
+function isPublicNavHref(href: NavItem['href']): href is PublicPath {
+  return href !== '/admin';
+}
+
 export default function App() {
-  const [path] = useState(() => window.location.pathname);
+  const [path, setPath] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    function syncPath() {
+      setPath(window.location.pathname);
+    }
+
+    window.addEventListener('popstate', syncPath);
+    return () => window.removeEventListener('popstate', syncPath);
+  }, []);
+
+  function navigateTo(nextPath: PublicPath) {
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath);
+    }
+
+    setPath(nextPath);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
 
   if (path === '/admin') {
     return <AdminApp />;
   }
 
-  return <Storefront />;
+  return <Storefront activePath={normalizePublicPath(path)} navigateTo={navigateTo} />;
 }
 
-function Storefront() {
+function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateTo: NavigateTo}) {
   const [openFaq, setOpenFaq] = useState(0);
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -330,171 +376,61 @@ function Storefront() {
         Skip to content
       </a>
 
-      <header className="site-header">
-        <div className="site-container header-inner">
-          <a className="brand-lockup" href="#main-content" aria-label="Bikash Chicken Point home">
-            <img src={logoUrl} alt="" className="brand-logo" width="64" height="64" />
-            <span>
-              <span className="brand-name">{siteData.shopName}</span>
-              <span className="brand-subname">{siteData.shopNameBengali}</span>
-            </span>
-          </a>
-
-          <div className="header-actions">
-            <span className={`status-pill ${isOpenNow ? 'is-open' : 'is-closed'}`}>
-              <span aria-hidden="true" />
-              {isOpenNow ? 'Open now' : 'Open daily 8 AM'}
-            </span>
-            <a className="icon-button secondary" href={callLink} aria-label={`Call ${siteData.shopName}`}>
-              <Phone size={19} />
-              <span>Call</span>
-            </a>
-            <a className="icon-button whatsapp" href={buildWhatsappLink(generalOrderMessage)}>
-              <MessageCircle size={19} />
-              <span>WhatsApp</span>
-            </a>
-          </div>
-        </div>
-      </header>
-
+      <SiteHeader
+        activePath={activePath}
+        callLink={callLink}
+        generalOrderMessage={generalOrderMessage}
+        isOpenNow={isOpenNow}
+        navigateTo={navigateTo}
+      />
       <main id="main-content">
-        <section className="hero-section">
-          <div className="site-container hero-grid">
-            <div className="hero-copy">
-              <p className="eyebrow">{siteData.hero.eyebrow}</p>
-              <h1>{siteData.hero.title}</h1>
-              <p className="hero-subtitle">{siteData.hero.subtitle}</p>
-
-              <div className="fast-track-badge" aria-label="Fast track pickup">
-                <Clock size={19} />
-                <span>{siteData.fastTrack.english}</span>
-                <strong>{siteData.fastTrack.bengali}</strong>
-              </div>
-
-              <div className="hero-actions" aria-label="Primary ordering actions">
-                <a className="primary-cta" href="#menu">
-                  <ShoppingBag size={21} />
-                  Pre-Book for Pickup
-                </a>
-                <a className="plain-link" href="#b2b">
-                  <BriefcaseBusiness size={19} />
-                  Restaurants/Hotels
-                </a>
-                <a className="plain-link" href="#loyalty">
-                  Loyalty Check
-                </a>
-              </div>
-            </div>
-
-            <div className="hero-panel" aria-label="Shop details">
-              <img src={logoUrl} alt={`${siteData.shopName} logo`} className="hero-logo" />
-              <div className="hero-detail-list">
-                <p>
-                  <MapPin size={18} />
-                  <span>{siteData.address}</span>
-                </p>
-                <p>
-                  <Clock size={18} />
-                  <span>{siteData.timing}</span>
-                </p>
-                <p>
-                  <ShoppingBag size={18} />
-                  <span>{siteData.pickupNote}</span>
-                </p>
-                <p>
-                  <BriefcaseBusiness size={18} />
-                  <span>UDYAM: {siteData.udyamRegistrationNumber}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="proof-strip" aria-label="Shop promises">
-          <div className="site-container proof-grid">
-            <p>
-              <CheckCircle2 size={18} />
-              Walk-in pickup only
-            </p>
-            <p>
-              <CheckCircle2 size={18} />
-              Cut after pre-booking
-            </p>
-            <p>
-              <CheckCircle2 size={18} />
-              WhatsApp order number
-            </p>
-          </div>
-        </section>
-
-        <B2BSection products={products} />
-
-        <section id="menu" className="section-block menu-section">
-          <div className="site-container">
-            <div className="section-heading">
-              <p className="eyebrow">Live Menu / আজকের রেট</p>
-              <h2>Choose the cut you need.</h2>
-              <p>
-                Counter rates are updated by the shop. Pick weight, cut style, and time before you leave.
-              </p>
-            </div>
-
-            {productError && <p className="inline-alert">{productError}</p>}
-
-            <div className="menu-list">
-              {isLoadingProducts
-                ? Array.from({length: 4}, (_, index) => (
-                    <article className="menu-item skeleton-item" key={index}>
-                      <span />
-                      <span />
-                    </article>
-                  ))
-                : products.map((product) => (
-                    <MenuProductCard key={product.id} product={product} onBook={openBooking} />
-                  ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section-block order-section">
-          <div className="site-container order-grid">
-            <div className="section-heading align-left">
-              <p className="eyebrow">How pickup works</p>
-              <h2>Fast counter pickup, no prepaid checkout.</h2>
-              <p>
-                This is built for the market rush. Pre-book, get your four digit order number,
-                then pay after the counter confirms weight and amount.
-              </p>
-            </div>
-
-            <div className="order-steps">
-              {siteData.orderSteps.map((step, index) => (
-                <article key={step.title} className="order-step">
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <div>
-                    <h3>{step.title}</h3>
-                    <p>{step.body}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <LoyaltySection loyalty={loyalty} setLoyalty={setLoyalty} onCheck={checkLoyalty} />
-        <PaymentAndReview callLink={callLink} />
-        <LocationSection callLink={callLink} generalOrderMessage={generalOrderMessage} />
-        <FaqSection openFaq={openFaq} setOpenFaq={setOpenFaq} callLink={callLink} />
+        {activePath === '/' && (
+          <HomePage
+            callLink={callLink}
+            generalOrderMessage={generalOrderMessage}
+            isOpenNow={isOpenNow}
+            navigateTo={navigateTo}
+          />
+        )}
+        {activePath === '/menu' && (
+          <MenuPage
+            isLoadingProducts={isLoadingProducts}
+            onBook={openBooking}
+            productError={productError}
+            products={products}
+          />
+        )}
+        {activePath === '/bulk-loyalty' && (
+          <BulkLoyaltyPage
+            loyalty={loyalty}
+            onCheckLoyalty={checkLoyalty}
+            products={products}
+            setLoyalty={setLoyalty}
+          />
+        )}
+        {activePath === '/visit-help' && (
+          <VisitHelpPage
+            callLink={callLink}
+            generalOrderMessage={generalOrderMessage}
+            openFaq={openFaq}
+            setOpenFaq={setOpenFaq}
+          />
+        )}
       </main>
 
-      <Footer />
+      <Footer
+        activePath={activePath}
+        callLink={callLink}
+        generalOrderMessage={generalOrderMessage}
+        navigateTo={navigateTo}
+      />
 
       <nav className="mobile-order-bar" aria-label="Mobile quick order actions">
         <a href={callLink}>
           <Phone size={18} />
           Call
         </a>
-        <a href="#menu">
+        <a href="/menu" onClick={(event) => handleRouteClick(event, '/menu', navigateTo)}>
           <ShoppingBag size={18} />
           Pre-book
         </a>
@@ -513,6 +449,403 @@ function Storefront() {
         />
       )}
     </div>
+  );
+}
+
+function handleRouteClick(event: MouseEvent<HTMLAnchorElement>, path: PublicPath, navigateTo: NavigateTo) {
+  event.preventDefault();
+  navigateTo(path);
+}
+
+function SiteHeader({
+  activePath,
+  callLink,
+  generalOrderMessage,
+  isOpenNow,
+  navigateTo,
+}: {
+  activePath: PublicPath;
+  callLink: string;
+  generalOrderMessage: string;
+  isOpenNow: boolean;
+  navigateTo: NavigateTo;
+}) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const firstDrawerLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [activePath]);
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    firstDrawerLinkRef.current?.focus();
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab' || !drawerRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(
+        drawerRef.current.querySelectorAll('a[href], button:not([disabled])'),
+      ) as HTMLElement[];
+      const firstElement = focusable[0];
+      const lastElement = focusable[focusable.length - 1];
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMenuOpen]);
+
+  return (
+    <header className="site-header">
+      <div className="site-container header-inner">
+        <a
+          className="brand-lockup"
+          href="/"
+          aria-label="Bikash Chicken Point home"
+          onClick={(event) => handleRouteClick(event, '/', navigateTo)}
+        >
+          <img src={logoUrl} alt="" className="brand-logo" width="64" height="64" />
+          <span>
+            <span className="brand-name">{siteData.shopName}</span>
+            <span className="brand-subname">{siteData.shopNameBengali}</span>
+          </span>
+        </a>
+
+        <nav className="primary-nav" aria-label="Main navigation">
+          {navItems.map((item) => {
+            const isActive = item.href === activePath;
+            if (isPublicNavHref(item.href)) {
+              const publicHref = item.href;
+              return (
+                <a
+                  key={item.href}
+                  href={publicHref}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
+
+        <div className="header-actions">
+          <span className={`status-pill ${isOpenNow ? 'is-open' : 'is-closed'}`}>
+            <span aria-hidden="true" />
+            {isOpenNow ? 'Open now' : 'Open daily 8 AM'}
+          </span>
+          <a className="icon-button secondary" href={callLink} aria-label={`Call ${siteData.shopName}`}>
+            <Phone size={19} />
+            <span>Call</span>
+          </a>
+          <a className="icon-button whatsapp" href={buildWhatsappLink(generalOrderMessage)}>
+            <MessageCircle size={19} />
+            <span>WhatsApp</span>
+          </a>
+          <button
+            className="mobile-menu-toggle"
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu-drawer"
+            onClick={() => setIsMenuOpen((current) => !current)}
+          >
+            <Menu size={22} />
+          </button>
+        </div>
+      </div>
+
+      {isMenuOpen && (
+        <div className="mobile-menu-layer" role="presentation" onClick={() => setIsMenuOpen(false)}>
+          <div
+            id="mobile-menu-drawer"
+            className="mobile-menu-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site menu"
+            ref={drawerRef}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mobile-menu-head">
+              <span>
+                <strong>{siteData.shopName}</strong>
+                <small>Sabji Market, Fuljhore</small>
+              </span>
+              <button className="round-icon-button" type="button" onClick={() => setIsMenuOpen(false)} aria-label="Close menu">
+                <X size={20} />
+              </button>
+            </div>
+
+            <nav className="mobile-menu-links" aria-label="Mobile navigation">
+              {navItems.map((item, index) => {
+                const isActive = item.href === activePath;
+                if (isPublicNavHref(item.href)) {
+                  const publicHref = item.href;
+                  return (
+                    <a
+                      key={item.href}
+                      href={publicHref}
+                      ref={index === 0 ? firstDrawerLinkRef : undefined}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
+                    >
+                      {item.label}
+                    </a>
+                  );
+                }
+
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    ref={index === 0 ? firstDrawerLinkRef : undefined}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </nav>
+
+            <div className="mobile-menu-actions">
+              <a className="primary-cta compact" href={buildWhatsappLink(generalOrderMessage)}>
+                <MessageCircle size={18} />
+                WhatsApp the shop
+              </a>
+              <a className="plain-link" href={callLink}>
+                <Phone size={18} />
+                Call {siteData.phone}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function HomePage({
+  callLink,
+  generalOrderMessage,
+  isOpenNow,
+  navigateTo,
+}: {
+  callLink: string;
+  generalOrderMessage: string;
+  isOpenNow: boolean;
+  navigateTo: NavigateTo;
+}) {
+  return (
+    <>
+      <section className="hero-section">
+        <div className="site-container hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow">{siteData.hero.eyebrow}</p>
+            <h1>{siteData.hero.title}</h1>
+            <p className="hero-subtitle">{siteData.hero.subtitle}</p>
+
+            <div className="fast-track-badge" aria-label="Fast track pickup">
+              <Clock size={19} />
+              <span>{siteData.fastTrack.english}</span>
+              <strong>{siteData.fastTrack.bengali}</strong>
+            </div>
+
+            <div className="hero-actions" aria-label="Primary ordering actions">
+              <a className="primary-cta" href="/menu" onClick={(event) => handleRouteClick(event, '/menu', navigateTo)}>
+                <ShoppingBag size={21} />
+                Pre-Book for Pickup
+              </a>
+              <a className="plain-link" href={buildWhatsappLink(generalOrderMessage)}>
+                <MessageCircle size={19} />
+                WhatsApp rate check
+              </a>
+              <a className="plain-link" href={callLink}>
+                <Phone size={19} />
+                Call now
+              </a>
+            </div>
+          </div>
+
+          <div className="hero-panel" aria-label="Shop details">
+            <img src={logoUrl} alt={`${siteData.shopName} logo`} className="hero-logo" />
+            <div className="hero-detail-list">
+              <p>
+                <MapPin size={18} />
+                <span>{siteData.address}</span>
+              </p>
+              <p>
+                <Clock size={18} />
+                <span>{isOpenNow ? 'Open now for pickup' : siteData.timing}</span>
+              </p>
+              <p>
+                <ShoppingBag size={18} />
+                <span>{siteData.pickupNote}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="proof-strip" aria-label="Shop promises">
+        <div className="site-container proof-grid">
+          <p>
+            <CheckCircle2 size={18} />
+            Walk-in pickup only
+          </p>
+          <p>
+            <CheckCircle2 size={18} />
+            Cut after pre-booking
+          </p>
+          <p>
+            <CheckCircle2 size={18} />
+            WhatsApp order number
+          </p>
+        </div>
+      </section>
+
+      <section className="section-block order-section">
+        <div className="site-container order-grid">
+          <div className="section-heading align-left">
+            <p className="eyebrow">How pickup works</p>
+            <h2>Fast counter pickup, no prepaid checkout.</h2>
+            <p>
+              This is built for the market rush. Pre-book, get your four digit order number,
+              then pay after the counter confirms weight and amount.
+            </p>
+            <a className="plain-link" href="/visit-help" onClick={(event) => handleRouteClick(event, '/visit-help', navigateTo)}>
+              <MapPin size={18} />
+              Find the shop
+            </a>
+          </div>
+
+          <div className="order-steps">
+            {siteData.orderSteps.map((step, index) => (
+              <article key={step.title} className="order-step">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function MenuPage({
+  isLoadingProducts,
+  onBook,
+  productError,
+  products,
+}: {
+  isLoadingProducts: boolean;
+  onBook: (product: Product) => void;
+  productError: string;
+  products: Product[];
+}) {
+  return (
+    <section id="menu" className="section-block menu-section page-section">
+      <div className="site-container">
+        <div className="section-heading">
+          <p className="eyebrow">Live Menu / আজকের রেট</p>
+          <h2>Choose the cut you need.</h2>
+          <p>
+            Counter rates are updated by the shop. Pick weight, cut style, and time before you leave.
+          </p>
+        </div>
+
+        {productError && <p className="inline-alert">{productError}</p>}
+
+        <div className="menu-list">
+          {isLoadingProducts
+            ? Array.from({length: 4}, (_, index) => (
+                <article className="menu-item skeleton-item" key={index}>
+                  <span />
+                  <span />
+                </article>
+              ))
+            : products.map((product) => (
+                <MenuProductCard key={product.id} product={product} onBook={onBook} />
+              ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BulkLoyaltyPage({
+  loyalty,
+  onCheckLoyalty,
+  products,
+  setLoyalty,
+}: {
+  loyalty: LoyaltyState;
+  onCheckLoyalty: (event: FormEvent<HTMLFormElement>) => void;
+  products: Product[];
+  setLoyalty: (state: LoyaltyState) => void;
+}) {
+  return (
+    <>
+      <B2BSection products={products} />
+      <LoyaltySection loyalty={loyalty} setLoyalty={setLoyalty} onCheck={onCheckLoyalty} />
+    </>
+  );
+}
+
+function VisitHelpPage({
+  callLink,
+  generalOrderMessage,
+  openFaq,
+  setOpenFaq,
+}: {
+  callLink: string;
+  generalOrderMessage: string;
+  openFaq: number;
+  setOpenFaq: (index: number) => void;
+}) {
+  return (
+    <>
+      <LocationSection callLink={callLink} generalOrderMessage={generalOrderMessage} />
+      <PaymentAndReview callLink={callLink} />
+      <FaqSection openFaq={openFaq} setOpenFaq={setOpenFaq} callLink={callLink} />
+    </>
   );
 }
 
@@ -987,11 +1320,26 @@ function FaqSection({
   );
 }
 
-function Footer() {
+function Footer({
+  activePath,
+  callLink,
+  generalOrderMessage,
+  navigateTo,
+}: {
+  activePath: PublicPath;
+  callLink: string;
+  generalOrderMessage: string;
+  navigateTo: NavigateTo;
+}) {
   return (
     <footer className="site-footer">
       <div className="site-container footer-inner">
-        <a className="footer-brand" href="#main-content" aria-label={`${siteData.shopName} home`}>
+        <a
+          className="footer-brand"
+          href="/"
+          aria-label={`${siteData.shopName} home`}
+          onClick={(event) => handleRouteClick(event, '/', navigateTo)}
+        >
           <img src={logoUrl} alt="" className="footer-logo" width="48" height="48" />
           <span className="footer-brand-copy">
             <span className="footer-brand-name">{siteData.shopName}</span>
@@ -999,14 +1347,39 @@ function Footer() {
           </span>
         </a>
 
-        <span className="footer-locality">Sabji Market, Fuljhore</span>
+        <div className="footer-contact">
+          <span className="footer-locality">Sabji Market, Fuljhore</span>
+          <a href={callLink}>{siteData.phone}</a>
+          <a href={buildWhatsappLink(generalOrderMessage)}>WhatsApp</a>
+        </div>
 
         <nav className="footer-links" aria-label="Footer">
-          <a href="#menu">Cuts</a>
-          <a href="#b2b">B2B</a>
-          <a href="#payment">Payment</a>
-          <a href="#location">Location</a>
-          <a href="/admin">Admin</a>
+          {navItems.map((item) => {
+            const isActive = item.href === activePath;
+            if (isPublicNavHref(item.href)) {
+              const publicHref = item.href;
+              return (
+                <a
+                  key={item.href}
+                  href={publicHref}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
       </div>
     </footer>
