@@ -872,7 +872,12 @@ function MenuProductCard({
       <div className="menu-action">
         <span>{formatPrice(product.price_per_kg)}</span>
         <small>{detail?.weight}</small>
-        <button type="button" disabled={!product.is_available} onClick={() => onBook(product)}>
+        <button
+          type="button"
+          disabled={!product.is_available}
+          onClick={() => onBook(product)}
+          aria-label={`${product.is_available ? 'Pre-book' : 'Not available'} ${product.name}`}
+        >
           {product.is_available ? 'Pre-Book for Pickup' : 'Not available now'}
           <ShoppingBag size={17} />
         </button>
@@ -900,9 +905,67 @@ function BookingModal({
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const sheetRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !sheetRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(
+        sheetRef.current.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])'),
+      ) as HTMLElement[];
+      const firstElement = focusable[0];
+      const lastElement = focusable[focusable.length - 1];
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.body.classList.add('has-modal');
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.classList.remove('has-modal');
+      document.removeEventListener('keydown', handleKeyDown);
+      previousActiveElement?.focus();
+    };
+  }, []);
+
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="booking-sheet" role="dialog" aria-modal="true" aria-labelledby="booking-title">
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="booking-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-title"
+        ref={sheetRef}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="sheet-header">
           <div>
             <p className="eyebrow">{siteData.booking.titleBengali}</p>
@@ -911,7 +974,13 @@ function BookingModal({
               {product.name} · {product.name_bengali} · {formatPrice(product.price_per_kg)}
             </p>
           </div>
-          <button className="round-icon-button" type="button" onClick={onClose} aria-label="Close booking form">
+          <button
+            className="round-icon-button"
+            type="button"
+            onClick={onClose}
+            aria-label="Close booking form"
+            ref={closeButtonRef}
+          >
             <X size={20} />
           </button>
         </div>
@@ -920,6 +989,9 @@ function BookingModal({
           <div className="booking-success">
             <CheckCircle2 size={34} />
             <h3>Order #{result.orderCode} sent to WhatsApp</h3>
+            <p className="booking-success-note">
+              Keep this number handy at the counter. আমরা অর্ডার নম্বর দেখে প্যাকেট মিলিয়ে দেব।
+            </p>
             <p>{result.message}</p>
             <a className="primary-cta compact" href={buildWhatsappLink(result.message)}>
               <MessageCircle size={18} />
@@ -928,6 +1000,9 @@ function BookingModal({
           </div>
         ) : (
           <form className="booking-form" onSubmit={onSubmit}>
+            <p className="booking-counter-note">
+              Pay after the counter confirms final weight and rate. No prepaid checkout here.
+            </p>
             <label>
               <span>Name / নাম</span>
               <input
