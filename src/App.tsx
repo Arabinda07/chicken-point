@@ -71,11 +71,17 @@ type AdminProductDraft = Product & {
 type PublicPath = '/' | '/menu' | '/bulk-loyalty' | '/visit-help';
 
 type NavItem = {
-  href: PublicPath | '/admin';
+  href: PublicPath;
   label: string;
 };
 
 type NavigateTo = (path: PublicPath) => void;
+
+type RateStatus = {
+  isTrusted: boolean;
+  label: string;
+  detail: string;
+};
 
 const publicPaths: PublicPath[] = ['/', '/menu', '/bulk-loyalty', '/visit-help'];
 
@@ -84,8 +90,13 @@ const navItems: NavItem[] = [
   {href: '/menu', label: 'Menu'},
   {href: '/bulk-loyalty', label: 'Bulk & Loyalty'},
   {href: '/visit-help', label: 'Visit & Help'},
-  {href: '/admin', label: 'Admin'},
 ];
+
+const unconfirmedRateStatus: RateStatus = {
+  isTrusted: false,
+  label: "Call to confirm today's rate",
+  detail: 'Live counter rates are not confirmed on this device. WhatsApp before leaving.',
+};
 
 const defaultBookingForm: BookingFormState = {
   customerName: '',
@@ -119,8 +130,67 @@ function formatPrice(price: number) {
   return `₹${Math.round(price)}/kg`;
 }
 
+function formatKolkataDateKey(date: Date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function formatKolkataTime(date: Date) {
+  return new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
+}
+
 function formatWeight(weightKg: number) {
   return Number.isInteger(weightKg) ? `${weightKg}kg` : `${weightKg.toFixed(1)}kg`;
+}
+
+function getRateStatus(products: Product[]): RateStatus {
+  const latestRateUpdate = products.reduce<Date | null>((latest, product) => {
+    if (!product.updated_at) {
+      return latest;
+    }
+
+    const updatedAt = new Date(product.updated_at);
+    if (Number.isNaN(updatedAt.getTime())) {
+      return latest;
+    }
+
+    return latest && latest > updatedAt ? latest : updatedAt;
+  }, null);
+
+  if (!latestRateUpdate) {
+    return unconfirmedRateStatus;
+  }
+
+  if (formatKolkataDateKey(latestRateUpdate) !== formatKolkataDateKey(new Date())) {
+    return {
+      isTrusted: false,
+      label: "Call to confirm today's rate",
+      detail: `Last shop update was ${formatKolkataTime(latestRateUpdate)}. Confirm before leaving.`,
+    };
+  }
+
+  return {
+    isTrusted: true,
+    label: `Updated today at ${formatKolkataTime(latestRateUpdate)}`,
+    detail: 'Final amount still depends on counter weight.',
+  };
+}
+
+function isTenDigitPhone(phone: string) {
+  return phone.replace(/\D/g, '').length === 10;
+}
+
+function normalizePhone(phone: string) {
+  return phone.replace(/\D/g, '');
 }
 
 function generateOrderCode() {
@@ -167,10 +237,6 @@ function normalizePublicPath(pathname: string): PublicPath {
   return publicPaths.includes(pathname as PublicPath) ? (pathname as PublicPath) : '/';
 }
 
-function isPublicNavHref(href: NavItem['href']): href is PublicPath {
-  return href !== '/admin';
-}
-
 export default function App() {
   const [path, setPath] = useState(() => window.location.pathname);
 
@@ -204,6 +270,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productError, setProductError] = useState('');
+  const [rateStatus, setRateStatus] = useState<RateStatus>(unconfirmedRateStatus);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormState>(defaultBookingForm);
   const [bookingError, setBookingError] = useState('');
@@ -231,6 +298,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
     async function fetchProducts() {
       if (!isSupabaseConfigured) {
         setIsLoadingProducts(false);
+        setRateStatus(unconfirmedRateStatus);
         setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
         return;
       }
@@ -247,11 +315,14 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
       setIsLoadingProducts(false);
 
       if (error) {
+        setRateStatus(unconfirmedRateStatus);
         setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
         return;
       }
 
-      setProducts(normalizeProducts((data ?? []) as Product[]));
+      const normalizedProducts = normalizeProducts((data ?? []) as Product[]);
+      setProducts(normalizedProducts);
+      setRateStatus(getRateStatus(normalizedProducts));
       setProductError('');
     }
 
@@ -288,6 +359,11 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
       return;
     }
 
+    if (!isTenDigitPhone(bookingForm.phone)) {
+      setBookingError('Enter a 10 digit phone number. ১০ সংখ্যার ফোন নম্বর দিন।');
+      return;
+    }
+
     if (!weightKg || weightKg <= 0 || !pickupTime) {
       setBookingError('Choose weight and pickup time. ওজন আর পিকআপ সময় বেছে নিন।');
       return;
@@ -306,7 +382,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
       const booking: BookingInsert = {
         order_code: orderCode,
         customer_name: bookingForm.customerName.trim(),
-        phone: bookingForm.phone.trim(),
+        phone: normalizePhone(bookingForm.phone),
         product_id: selectedProduct.id,
         product_name: selectedProduct.name,
         weight_kg: weightKg,
@@ -398,6 +474,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
             onBook={openBooking}
             productError={productError}
             products={products}
+            rateStatus={rateStatus}
           />
         )}
         {activePath === '/bulk-loyalty' && (
@@ -405,6 +482,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
             loyalty={loyalty}
             onCheckLoyalty={checkLoyalty}
             products={products}
+            rateStatus={rateStatus}
             setLoyalty={setLoyalty}
           />
         )}
@@ -426,9 +504,9 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
       />
 
       <nav className="mobile-order-bar" aria-label="Mobile quick order actions">
-        <a href={callLink}>
-          <Phone size={18} />
-          Call
+        <a href={buildWhatsappLink(generalOrderMessage)}>
+          <MessageCircle size={18} />
+          WhatsApp rate check
         </a>
         <a href="/menu" onClick={(event) => handleRouteClick(event, '/menu', navigateTo)}>
           <ShoppingBag size={18} />
@@ -444,6 +522,7 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
           error={bookingError}
           result={bookingResult}
           isSubmitting={isSubmittingBooking}
+          rateStatus={rateStatus}
           onClose={() => setSelectedProduct(null)}
           onSubmit={submitBooking}
         />
@@ -537,25 +616,12 @@ function SiteHeader({
         <nav className="primary-nav" aria-label="Main navigation">
           {navItems.map((item) => {
             const isActive = item.href === activePath;
-            if (isPublicNavHref(item.href)) {
-              const publicHref = item.href;
-              return (
-                <a
-                  key={item.href}
-                  href={publicHref}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
-                >
-                  {item.label}
-                </a>
-              );
-            }
-
             return (
               <a
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
+                onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
               >
                 {item.label}
               </a>
@@ -613,27 +679,13 @@ function SiteHeader({
             <nav className="mobile-menu-links" aria-label="Mobile navigation">
               {navItems.map((item, index) => {
                 const isActive = item.href === activePath;
-                if (isPublicNavHref(item.href)) {
-                  const publicHref = item.href;
-                  return (
-                    <a
-                      key={item.href}
-                      href={publicHref}
-                      ref={index === 0 ? firstDrawerLinkRef : undefined}
-                      aria-current={isActive ? 'page' : undefined}
-                      onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
-                    >
-                      {item.label}
-                    </a>
-                  );
-                }
-
                 return (
                   <a
                     key={item.href}
                     href={item.href}
                     ref={index === 0 ? firstDrawerLinkRef : undefined}
                     aria-current={isActive ? 'page' : undefined}
+                    onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
                   >
                     {item.label}
                   </a>
@@ -774,11 +826,13 @@ function MenuPage({
   onBook,
   productError,
   products,
+  rateStatus,
 }: {
   isLoadingProducts: boolean;
   onBook: (product: Product) => void;
   productError: string;
   products: Product[];
+  rateStatus: RateStatus;
 }) {
   return (
     <section id="menu" className="section-block menu-section page-section">
@@ -789,9 +843,18 @@ function MenuPage({
           <p>
             Counter rates are updated by the shop. Pick weight, cut style, and time before you leave.
           </p>
+          <p className={`rate-status ${rateStatus.isTrusted ? '' : 'is-unconfirmed'}`}>
+            <Clock size={17} />
+            <span>{rateStatus.label}</span>
+            <small>{rateStatus.detail}</small>
+          </p>
         </div>
 
-        {productError && <p className="inline-alert">{productError}</p>}
+        {productError && (
+          <p className="inline-alert" role="alert" aria-live="polite">
+            {productError}
+          </p>
+        )}
 
         <div className="menu-list">
           {isLoadingProducts
@@ -802,7 +865,7 @@ function MenuPage({
                 </article>
               ))
             : products.map((product) => (
-                <MenuProductCard key={product.id} product={product} onBook={onBook} />
+                <MenuProductCard key={product.id} product={product} rateStatus={rateStatus} onBook={onBook} />
               ))}
         </div>
       </div>
@@ -814,16 +877,18 @@ function BulkLoyaltyPage({
   loyalty,
   onCheckLoyalty,
   products,
+  rateStatus,
   setLoyalty,
 }: {
   loyalty: LoyaltyState;
   onCheckLoyalty: (event: FormEvent<HTMLFormElement>) => void;
   products: Product[];
+  rateStatus: RateStatus;
   setLoyalty: (state: LoyaltyState) => void;
 }) {
   return (
     <>
-      <B2BSection products={products} />
+      <B2BSection products={products} rateStatus={rateStatus} />
       <LoyaltySection loyalty={loyalty} setLoyalty={setLoyalty} onCheck={onCheckLoyalty} />
     </>
   );
@@ -843,7 +908,7 @@ function VisitHelpPage({
   return (
     <>
       <LocationSection callLink={callLink} generalOrderMessage={generalOrderMessage} />
-      <PaymentAndReview callLink={callLink} />
+      <GoogleReviewSection callLink={callLink} />
       <FaqSection openFaq={openFaq} setOpenFaq={setOpenFaq} callLink={callLink} />
     </>
   );
@@ -851,10 +916,12 @@ function VisitHelpPage({
 
 function MenuProductCard({
   product,
+  rateStatus,
   onBook,
 }: {
   key?: string;
   product: Product;
+  rateStatus: RateStatus;
   onBook: (product: Product) => void;
 }) {
   const detail = getProductDetail(product.id);
@@ -870,8 +937,10 @@ function MenuProductCard({
         <p>{detail?.detail ?? 'Fresh cut from the shop counter.'}</p>
       </div>
       <div className="menu-action">
-        <span>{formatPrice(product.price_per_kg)}</span>
-        <small>{detail?.weight}</small>
+        <span className={rateStatus.isTrusted ? '' : 'rate-unconfirmed'}>
+          {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : "Call to confirm today's rate"}
+        </span>
+        <small>{rateStatus.isTrusted ? detail?.weight : 'WhatsApp before leaving'}</small>
         <button
           type="button"
           disabled={!product.is_available}
@@ -893,6 +962,7 @@ function BookingModal({
   error,
   result,
   isSubmitting,
+  rateStatus,
   onClose,
   onSubmit,
 }: {
@@ -902,12 +972,17 @@ function BookingModal({
   error: string;
   result: BookingResult | null;
   isSubmitting: boolean;
+  rateStatus: RateStatus;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   const sheetRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const onCloseRef = useRef(onClose);
+  const bookingWeight = getBookingWeight(form);
+  const pickupTime = getPickupTime(form);
+  const selectedCut = cutStyleOptions.find((option) => option.value === form.cutStyle) ?? cutStyleOptions[0];
+  const rateLine = rateStatus.isTrusted ? `${formatPrice(product.price_per_kg)} before final counter weight` : rateStatus.label;
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -971,7 +1046,7 @@ function BookingModal({
             <p className="eyebrow">{siteData.booking.titleBengali}</p>
             <h2 id="booking-title">{siteData.booking.title}</h2>
             <p>
-              {product.name} · {product.name_bengali} · {formatPrice(product.price_per_kg)}
+              {product.name} · {product.name_bengali} · {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : 'Rate to be confirmed at counter'}
             </p>
           </div>
           <button
@@ -986,7 +1061,7 @@ function BookingModal({
         </div>
 
         {result ? (
-          <div className="booking-success">
+          <div className="booking-success" role="status" aria-live="polite">
             <CheckCircle2 size={34} />
             <h3>Order #{result.orderCode} sent to WhatsApp</h3>
             <p className="booking-success-note">
@@ -997,9 +1072,25 @@ function BookingModal({
               <MessageCircle size={18} />
               Open WhatsApp again
             </a>
+            <article className="booking-payment-panel">
+              <div>
+                <p className="eyebrow">Payment after counter</p>
+                <h3>Pay after we confirm your order.</h3>
+                <p>
+                  Scan the UPI QR only after we confirm order number, final weight, and amount at the shop.
+                </p>
+                <p className="upi-line">
+                  <Banknote size={18} />
+                  UPI shown on QR: <strong>{siteData.upiId}</strong>
+                </p>
+              </div>
+              <div className="qr-card payment-qr-card">
+                <img src={paymentQrUrl} alt={`UPI payment QR for ${siteData.shopName}`} loading="lazy" />
+              </div>
+            </article>
           </div>
         ) : (
-          <form className="booking-form" onSubmit={onSubmit}>
+          <form className="booking-form" onSubmit={onSubmit} aria-live="polite">
             <p className="booking-counter-note">
               Pay after the counter confirms final weight and rate. No prepaid checkout here.
             </p>
@@ -1093,7 +1184,19 @@ function BookingModal({
               </span>
             </label>
 
-            {error && <p className="form-error">{error}</p>}
+            <div className="booking-order-summary" aria-live="polite">
+              <span>Order summary</span>
+              <strong>
+                {formatWeight(bookingWeight)} {selectedCut.whatsappLabel} · {pickupTime}
+              </strong>
+              <small>{rateLine}</small>
+            </div>
+
+            {error && (
+              <p className="form-error" role="alert" aria-live="polite">
+                {error}
+              </p>
+            )}
 
             <button className="primary-cta submit-booking" type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="spin" size={19} /> : <MessageCircle size={19} />}
@@ -1106,7 +1209,7 @@ function BookingModal({
   );
 }
 
-function B2BSection({products}: {products: Product[]}) {
+function B2BSection({products, rateStatus}: {products: Product[]; rateStatus: RateStatus}) {
   return (
     <section className="section-block b2b-section" id="b2b">
       <div className="site-container b2b-grid">
@@ -1128,6 +1231,11 @@ function B2BSection({products}: {products: Product[]}) {
           <p className="invoice-note">
             Tick <strong>{siteData.booking.invoiceLabel}</strong> while pre-booking.
           </p>
+          <p className={`rate-status ${rateStatus.isTrusted ? '' : 'is-unconfirmed'}`}>
+            <Clock size={17} />
+            <span>{rateStatus.label}</span>
+            <small>{rateStatus.detail}</small>
+          </p>
         </div>
 
         <div className="rate-card" aria-label="Current B2B rate card">
@@ -1139,7 +1247,9 @@ function B2BSection({products}: {products: Product[]}) {
             {products.map((product) => (
               <li key={product.id}>
                 <span>{product.name}</span>
-                <strong>{formatPrice(product.price_per_kg)}</strong>
+                <strong className={rateStatus.isTrusted ? '' : 'rate-unconfirmed'}>
+                  {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : 'Call to confirm'}
+                </strong>
               </li>
             ))}
           </ul>
@@ -1187,7 +1297,11 @@ function LoyaltySection({
           <div className="stamp-meter" aria-label={`${totalKg.toFixed(1)} kilograms out of 10`}>
             <span style={{width: `${progress}%`}} />
           </div>
-          {loyalty.error && <p className="form-error">{loyalty.error}</p>}
+          {loyalty.error && (
+            <p className="form-error" role="alert" aria-live="polite">
+              {loyalty.error}
+            </p>
+          )}
           <button className="plain-link" type="submit" disabled={loyalty.isLoading}>
             {loyalty.isLoading ? <Loader2 className="spin" size={18} /> : <Stamp size={18} />}
             Loyalty Check
@@ -1198,29 +1312,11 @@ function LoyaltySection({
   );
 }
 
-function PaymentAndReview({callLink}: {callLink: string}) {
+function GoogleReviewSection({callLink}: {callLink: string}) {
   return (
-    <section className="section-block action-section" id="payment">
-      <div className="site-container action-grid">
-        <article className="qr-panel payment-panel">
-          <div className="qr-copy">
-            <p className="eyebrow">Payment</p>
-            <h2>Pay after we confirm your order.</h2>
-            <p>
-              Scan the UPI QR only after the counter confirms weight and amount.
-              If you pay early, call us so we can match the payment to your order number.
-            </p>
-            <p className="upi-line">
-              <Banknote size={18} />
-              UPI shown on QR: <strong>{siteData.upiId}</strong>
-            </p>
-          </div>
-          <div className="qr-card payment-qr-card">
-            <img src={paymentQrUrl} alt={`UPI payment QR for ${siteData.shopName}`} loading="lazy" />
-          </div>
-        </article>
-
-        <article className="qr-panel review-panel">
+    <section className="section-block action-section" id="review">
+      <div className="site-container">
+        <article className="qr-panel review-panel google-review-panel">
           <div className="qr-copy">
             <p className="eyebrow">Google Business</p>
             <h2>Scan the Google QR after your order.</h2>
@@ -1431,25 +1527,12 @@ function Footer({
         <nav className="footer-links" aria-label="Footer">
           {navItems.map((item) => {
             const isActive = item.href === activePath;
-            if (isPublicNavHref(item.href)) {
-              const publicHref = item.href;
-              return (
-                <a
-                  key={item.href}
-                  href={publicHref}
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={(event) => handleRouteClick(event, publicHref, navigateTo)}
-                >
-                  {item.label}
-                </a>
-              );
-            }
-
             return (
               <a
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
+                onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
               >
                 {item.label}
               </a>
@@ -1597,7 +1680,11 @@ function AdminApp() {
             <span>Password</span>
             <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" />
           </label>
-          {authError && <p className="form-error">{authError}</p>}
+          {authError && (
+            <p className="form-error" role="alert" aria-live="polite">
+              {authError}
+            </p>
+          )}
           <button className="primary-cta" type="submit">
             <UserRound size={19} />
             Sign in
@@ -1625,7 +1712,11 @@ function AdminApp() {
           </button>
         </div>
 
-        {adminError && <p className="form-error">{adminError}</p>}
+        {adminError && (
+          <p className="form-error" role="alert" aria-live="polite">
+            {adminError}
+          </p>
+        )}
 
         <div className="admin-product-list">
           {adminProducts.map((product) => (
