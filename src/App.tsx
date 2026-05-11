@@ -497,22 +497,10 @@ function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateT
       </main>
 
       <Footer
-        activePath={activePath}
         callLink={callLink}
         generalOrderMessage={generalOrderMessage}
         navigateTo={navigateTo}
       />
-
-      <nav className="mobile-order-bar" aria-label="Mobile quick order actions">
-        <a href={buildWhatsappLink(generalOrderMessage)}>
-          <MessageCircle size={18} />
-          WhatsApp rate check
-        </a>
-        <a href="/menu" onClick={(event) => handleRouteClick(event, '/menu', navigateTo)}>
-          <ShoppingBag size={18} />
-          Pre-book
-        </a>
-      </nav>
 
       {selectedProduct && (
         <BookingModal
@@ -1492,12 +1480,10 @@ function FaqSection({
 }
 
 function Footer({
-  activePath,
   callLink,
   generalOrderMessage,
   navigateTo,
 }: {
-  activePath: PublicPath;
   callLink: string;
   generalOrderMessage: string;
   navigateTo: NavigateTo;
@@ -1514,31 +1500,24 @@ function Footer({
           <img src={logoUrl} alt="" className="footer-logo" width="48" height="48" />
           <span className="footer-brand-copy">
             <span className="footer-brand-name">{siteData.shopName}</span>
-            <span className="footer-bengali">{siteData.shopNameBengali}</span>
+            <span className="footer-meta">
+              <MapPin size={14} aria-hidden="true" />
+              Sabji Market, Fuljhore
+            </span>
           </span>
         </a>
 
-        <div className="footer-contact">
-          <span className="footer-locality">Sabji Market, Fuljhore</span>
-          <a href={callLink}>{siteData.phone}</a>
-          <a href={buildWhatsappLink(generalOrderMessage)}>WhatsApp</a>
+        <div className="footer-actions" aria-label="Footer contact actions">
+          <a className="footer-action" href={callLink} aria-label={`Call ${siteData.phone}`}>
+            <Phone size={16} aria-hidden="true" />
+            <span className="footer-phone-wide">{siteData.phone}</span>
+            <span className="footer-phone-short">Call</span>
+          </a>
+          <a className="footer-action whatsapp" href={buildWhatsappLink(generalOrderMessage)}>
+            <MessageCircle size={16} aria-hidden="true" />
+            <span>WhatsApp</span>
+          </a>
         </div>
-
-        <nav className="footer-links" aria-label="Footer">
-          {navItems.map((item) => {
-            const isActive = item.href === activePath;
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
       </div>
     </footer>
   );

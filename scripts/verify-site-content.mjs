@@ -37,7 +37,10 @@ assert.match(app, /Updated today at/i, 'menu rates must show freshness when live
 assert.match(app, /Call to confirm today'?s rate/i, 'menu must soften prices when live rate freshness is not trusted');
 assert.doesNotMatch(app, /function VisitHelpPage[\s\S]*<PaymentAndReview callLink=\{callLink\} \/>/, 'payment QR must not be exposed on the visit/help page before order confirmation');
 assert.match(app, /booking-payment-panel/, 'booking success must expose payment QR only after order confirmation');
-assert.match(app, /mobile-order-bar[\s\S]*WhatsApp rate check/, 'mobile sticky actions should prioritize WhatsApp rate check');
+assert.doesNotMatch(app, /mobile-order-bar/, 'mobile sticky action bar must be removed from the app shell');
+assert.doesNotMatch(css, /mobile-order-bar/, 'mobile sticky action bar styles must be removed');
+assert.doesNotMatch(css, /padding-bottom:\s*calc\(7\.25rem/, 'site shell must not reserve space for a removed sticky action bar');
+assert.match(app, /mobile-menu-actions[\s\S]*WhatsApp the shop[\s\S]*Call \{siteData\.phone\}/, 'mobile drawer must keep WhatsApp and Call actions');
 assert.match(app, /isTenDigitPhone/, 'booking form must validate 10-digit phone numbers before submission');
 assert.match(app, /role="alert"/, 'form errors must be announced to assistive technology');
 assert.match(app, /aria-live="polite"/, 'submission status and errors must use live regions');
