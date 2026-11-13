@@ -1,1751 +1,871 @@
-import {FormEvent, MouseEvent, useEffect, useMemo, useRef, useState} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  Banknote,
-  BriefcaseBusiness,
-  CheckCircle2,
-  Clock,
-  Download,
-  ExternalLink,
-  FileText,
-  Loader2,
-  LogOut,
-  Menu,
-  MapPin,
-  MessageCircle,
   Phone,
-  QrCode,
-  Save,
+  MessageCircle,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
   ShoppingBag,
-  Stamp,
-  UserRound,
-  X,
+  ArrowRight,
+  ShieldCheck,
+  QrCode,
+  FileText,
+  ExternalLink,
+  ChevronRight,
+  User,
+  Sparkles,
+  Calendar,
+  Utensils,
+  LayoutDashboard,
+  Store,
+  Info,
+  Scale
 } from 'lucide-react';
-import {
-  cutStyleOptions,
-  fallbackProducts,
-  pickupOptions,
-  siteData,
-  weightOptions,
-} from './data';
-import {
-  Booking,
-  BookingInsert,
-  CutStyle,
-  Product,
-  isSupabaseConfigured,
-  supabase,
-} from './lib/supabase';
+import { siteData, fallbackProducts, cutStyleOptions, weightOptions, pickupOptions } from './data';
+import type { Product, CutStyle } from './lib/supabase';
+import { EarningsDashboard } from './components/EarningsDashboard';
+import { Button } from './components/ui/Button';
+import { Chip } from './components/ui/Chip';
+import { Surface } from './components/ui/Surface';
+import { ModalSheet } from './components/ui/ModalSheet';
 
-const logoUrl = new URL('../assets/logo.jpeg', import.meta.url).href;
-const paymentQrUrl = new URL('../assets/QR1.png', import.meta.url).href;
-const googleReviewQrUrl = new URL('../assets/Shop_GoogleQR.png', import.meta.url).href;
-
-type BookingFormState = {
-  customerName: string;
-  phone: string;
-  weightKg: number;
-  customWeight: string;
-  cutStyle: CutStyle;
-  pickupTime: string;
-  customPickupTime: string;
-  requestInvoice: boolean;
-};
-
-type BookingResult = {
-  orderCode: string;
-  message: string;
-};
-
-type LoyaltyState = {
-  phone: string;
-  totalKg: number | null;
-  isLoading: boolean;
-  error: string;
-};
-
-type AdminProductDraft = Product & {
-  draftPrice: string;
-  saveState?: 'idle' | 'saving' | 'saved' | 'error';
-};
-
-type PublicPath = '/' | '/menu' | '/bulk-loyalty' | '/visit-help';
-
-type NavItem = {
-  href: PublicPath;
-  label: string;
-};
-
-type NavigateTo = (path: PublicPath) => void;
-
-type RateStatus = {
-  isTrusted: boolean;
-  label: string;
-  detail: string;
-};
-
-const publicPaths: PublicPath[] = ['/', '/menu', '/bulk-loyalty', '/visit-help'];
-
-const navItems: NavItem[] = [
-  {href: '/', label: 'Home'},
-  {href: '/menu', label: 'Menu'},
-  {href: '/bulk-loyalty', label: 'Bulk & Loyalty'},
-  {href: '/visit-help', label: 'Visit & Help'},
-];
-
-const unconfirmedRateStatus: RateStatus = {
-  isTrusted: false,
-  label: "Call to confirm today's rate",
-  detail: 'Live counter rates are not confirmed on this device. WhatsApp before leaving.',
-};
-
-const defaultBookingForm: BookingFormState = {
-  customerName: '',
-  phone: '',
-  weightKg: 1,
-  customWeight: '',
-  cutStyle: 'curry',
-  pickupTime: 'ASAP',
-  customPickupTime: '',
-  requestInvoice: false,
-};
-
-function getKolkataMinutes() {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date());
-
-  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
-  const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
-  return hour * 60 + minute;
-}
-
-function buildWhatsappLink(message: string) {
-  return `https://wa.me/${siteData.whatsapp}?text=${encodeURIComponent(message)}`;
-}
-
-function formatPrice(price: number) {
-  return `₹${Math.round(price)}/kg`;
-}
-
-function formatKolkataDateKey(date: Date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-}
-
-function formatKolkataTime(date: Date) {
-  return new Intl.DateTimeFormat('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }).format(date);
-}
-
-function formatWeight(weightKg: number) {
-  return Number.isInteger(weightKg) ? `${weightKg}kg` : `${weightKg.toFixed(1)}kg`;
-}
-
-function getRateStatus(products: Product[]): RateStatus {
-  const latestRateUpdate = products.reduce<Date | null>((latest, product) => {
-    if (!product.updated_at) {
-      return latest;
-    }
-
-    const updatedAt = new Date(product.updated_at);
-    if (Number.isNaN(updatedAt.getTime())) {
-      return latest;
-    }
-
-    return latest && latest > updatedAt ? latest : updatedAt;
-  }, null);
-
-  if (!latestRateUpdate) {
-    return unconfirmedRateStatus;
-  }
-
-  if (formatKolkataDateKey(latestRateUpdate) !== formatKolkataDateKey(new Date())) {
-    return {
-      isTrusted: false,
-      label: "Call to confirm today's rate",
-      detail: `Last shop update was ${formatKolkataTime(latestRateUpdate)}. Confirm before leaving.`,
-    };
-  }
-
-  return {
-    isTrusted: true,
-    label: `Updated today at ${formatKolkataTime(latestRateUpdate)}`,
-    detail: 'Final amount still depends on counter weight.',
-  };
-}
-
-function isTenDigitPhone(phone: string) {
-  return phone.replace(/\D/g, '').length === 10;
-}
-
-function normalizePhone(phone: string) {
-  return phone.replace(/\D/g, '');
-}
-
-function generateOrderCode() {
-  return String(Math.floor(1000 + Math.random() * 9000));
-}
-
-function isDuplicateOrderCode(error: {code?: string; message?: string} | null) {
-  return error?.code === '23505' || /duplicate/i.test(error?.message ?? '');
-}
-
-function getProductDetail(productId: string) {
-  return siteData.menuDetails[productId as keyof typeof siteData.menuDetails];
-}
-
-function getBookingWeight(form: BookingFormState) {
-  const customWeight = Number(form.customWeight);
-  return Number.isFinite(customWeight) && customWeight > 0 ? customWeight : form.weightKg;
-}
-
-function getPickupTime(form: BookingFormState) {
-  return form.customPickupTime.trim() || form.pickupTime;
-}
-
-function buildBookingMessage(orderCode: string, product: Product, form: BookingFormState) {
-  const cut = cutStyleOptions.find((option) => option.value === form.cutStyle)?.whatsappLabel ?? 'Curry Cut';
-  const invoiceLine = form.requestInvoice ? ' Please prepare GST/Formal Invoice.' : '';
-  return (
-    `Hello Bikash Da, Order #${orderCode}. I will pick up ` +
-    `${formatWeight(getBookingWeight(form))} ${cut} at ${getPickupTime(form)}. ` +
-    `Please keep it ready. Item: ${product.name}.${invoiceLine}`
-  );
-}
-
-function normalizeProducts(products: Product[]) {
-  return products
-    .map((product) => ({
-      ...product,
-      price_per_kg: Number(product.price_per_kg),
-    }))
-    .sort((a, b) => a.display_order - b.display_order);
-}
-
-function normalizePublicPath(pathname: string): PublicPath {
-  return publicPaths.includes(pathname as PublicPath) ? (pathname as PublicPath) : '/';
-}
+import logoUrl from '../assets/logo.jpeg';
+import paymentQrUrl from '../assets/QR1.png';
+import googleReviewQrUrl from '../assets/Shop_GoogleQR.png';
 
 export default function App() {
-  const [path, setPath] = useState(() => window.location.pathname);
+  const [activeTab, setActiveTab] = useState<'shop' | 'qr' | 'bulk' | 'admin'>('shop');
+  const [selectedProduct, setSelectedProduct] = useState<Product>(fallbackProducts[0]);
+  const [selectedCut, setSelectedCut] = useState<CutStyle>('curry');
+  const [selectedWeight, setSelectedWeight] = useState<number>(1);
+  const [customWeight, setCustomWeight] = useState<string>('');
+  const [selectedPickup, setSelectedPickup] = useState<string>('ASAP');
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [requestInvoice, setRequestInvoice] = useState<boolean>(false);
+  const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
+  const [orderConfirmed, setOrderConfirmed] = useState<{ code: string; message: string } | null>(null);
+  const [ariaAnnouncement, setAriaAnnouncement] = useState<string>('');
 
-  useEffect(() => {
-    function syncPath() {
-      setPath(window.location.pathname);
+  // Shop Open / Closed Live Status based on Asia/Kolkata
+  const isShopOpen = useMemo(() => {
+    try {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        hour12: false,
+      }).formatToParts(new Date());
+      const hour = Number(parts.find(p => p.type === 'hour')?.value ?? '12');
+      return hour >= siteData.openingHours.startHour && hour < siteData.openingHours.endHour;
+    } catch {
+      return true;
     }
-
-    window.addEventListener('popstate', syncPath);
-    return () => window.removeEventListener('popstate', syncPath);
   }, []);
 
-  function navigateTo(nextPath: PublicPath) {
-    if (window.location.pathname !== nextPath) {
-      window.history.pushState({}, '', nextPath);
+  // Effective weight calculation
+  const effectiveWeight = useMemo(() => {
+    if (customWeight && !isNaN(Number(customWeight)) && Number(customWeight) > 0) {
+      return Number(customWeight);
     }
+    return selectedWeight;
+  }, [customWeight, selectedWeight]);
 
-    setPath(nextPath);
-    window.scrollTo({top: 0, behavior: 'smooth'});
-  }
+  // Estimated total calculation
+  const estimatedPrice = useMemo(() => {
+    return Math.round(selectedProduct.price_per_kg * effectiveWeight);
+  }, [selectedProduct, effectiveWeight]);
 
-  if (path === '/admin') {
-    return <AdminApp />;
-  }
+  // Open modal with light-dismiss setup
+  const openPreBook = (product?: Product) => {
+    if (product) {
+      setSelectedProduct(product);
+    }
+    setOrderConfirmed(null);
+    setIsSheetOpen(true);
+    setAriaAnnouncement(`Pre-booking dialog opened for ${product?.name ?? selectedProduct.name}`);
+  };
 
-  return <Storefront activePath={normalizePublicPath(path)} navigateTo={navigateTo} />;
-}
+  const closePreBook = () => {
+    setIsSheetOpen(false);
+    setAriaAnnouncement('Pre-booking dialog closed');
+  };
 
-function Storefront({activePath, navigateTo}: {activePath: PublicPath; navigateTo: NavigateTo}) {
-  const [openFaq, setOpenFaq] = useState(0);
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [productError, setProductError] = useState('');
-  const [rateStatus, setRateStatus] = useState<RateStatus>(unconfirmedRateStatus);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [bookingForm, setBookingForm] = useState<BookingFormState>(defaultBookingForm);
-  const [bookingError, setBookingError] = useState('');
-  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
-  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
-  const [loyalty, setLoyalty] = useState<LoyaltyState>({
-    phone: '',
-    totalKg: null,
-    isLoading: false,
-    error: '',
-  });
+  // Handle Order Submit & WhatsApp Redirect
+  const handleSubmitOrder = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const callLink = `tel:${siteData.phone.replace(/\s+/g, '')}`;
-  const isOpenNow = useMemo(() => {
-    const now = getKolkataMinutes();
+    const orderNum = Math.floor(1000 + Math.random() * 9000);
+    const orderCode = `BCP-${orderNum}`;
+    const cutName = cutStyleOptions.find(c => c.value === selectedCut)?.whatsappLabel ?? selectedCut;
+
+    const message = `Hello Bikash Chicken Point! I want to pre-book fresh chicken for walk-in pickup at Fuljhore Sabji Market:
+━━━━━━━━━━━━━━━━━
+📦 Order ID: #${orderCode}
+🍗 Item: ${selectedProduct.name} (${selectedProduct.name_bengali})
+⚖️ Quantity: ${effectiveWeight} kg
+🔪 Cut: ${cutName}
+⏱️ Pickup Time: ${selectedPickup}
+🧾 GST/Invoice: ${requestInvoice ? 'Yes, please' : 'Not required'}
+👤 Name: ${customerName}
+📞 Phone: ${customerPhone}
+💵 Estimated Rate: ~₹${estimatedPrice} (To be confirmed on counter scale)
+━━━━━━━━━━━━━━━━━
+Please confirm availability and keep it packed for pickup!`;
+
+    const whatsappUrl = `https://wa.me/${siteData.whatsapp}?text=${encodeURIComponent(message)}`;
+
+    setOrderConfirmed({
+      code: orderCode,
+      message: 'Your pre-booking summary is ready! Redirecting to WhatsApp to send confirmation...',
+    });
+    setAriaAnnouncement(`Order #${orderCode} created. Redirecting to WhatsApp.`);
+
+    // Open WhatsApp in new tab
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    }, 850);
+  };
+
+  if (activeTab === 'admin') {
     return (
-      now >= siteData.openingHours.startHour * 60 &&
-      now < siteData.openingHours.endHour * 60
+      <div className="min-h-screen-dvh bg-[#FAF7F2]">
+        <EarningsDashboard
+          onBackToShop={() => setActiveTab('shop')}
+          onSignOut={() => setActiveTab('shop')}
+        />
+      </div>
     );
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchProducts() {
-      if (!isSupabaseConfigured) {
-        setIsLoadingProducts(false);
-        setRateStatus(unconfirmedRateStatus);
-        setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
-        return;
-      }
-
-      const {data, error} = await supabase
-        .from('products')
-        .select('id,name,name_bengali,price_per_kg,is_available,display_order,updated_at')
-        .order('display_order', {ascending: true});
-
-      if (!isMounted) {
-        return;
-      }
-
-      setIsLoadingProducts(false);
-
-      if (error) {
-        setRateStatus(unconfirmedRateStatus);
-        setProductError('Today\'s counter rates are being confirmed. Please call or WhatsApp before leaving.');
-        return;
-      }
-
-      const normalizedProducts = normalizeProducts((data ?? []) as Product[]);
-      setProducts(normalizedProducts);
-      setRateStatus(getRateStatus(normalizedProducts));
-      setProductError('');
-    }
-
-    fetchProducts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const generalOrderMessage =
-    `Hi ${siteData.shopName}, I want to pre-book chicken for counter pickup. ` +
-    `Please confirm today's rate and availability.`;
-
-  function openBooking(product: Product) {
-    setSelectedProduct(product);
-    setBookingForm(defaultBookingForm);
-    setBookingError('');
-    setBookingResult(null);
-  }
-
-  async function submitBooking(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!selectedProduct) {
-      return;
-    }
-
-    const weightKg = getBookingWeight(bookingForm);
-    const pickupTime = getPickupTime(bookingForm);
-
-    if (!bookingForm.customerName.trim() || !bookingForm.phone.trim()) {
-      setBookingError('Name and phone are required. নাম আর ফোন নম্বর দিন।');
-      return;
-    }
-
-    if (!isTenDigitPhone(bookingForm.phone)) {
-      setBookingError('Enter a 10 digit phone number. ১০ সংখ্যার ফোন নম্বর দিন।');
-      return;
-    }
-
-    if (!weightKg || weightKg <= 0 || !pickupTime) {
-      setBookingError('Choose weight and pickup time. ওজন আর পিকআপ সময় বেছে নিন।');
-      return;
-    }
-
-    if (!isSupabaseConfigured) {
-      setBookingError('Online pre-booking is paused. Please call or WhatsApp the shop.');
-      return;
-    }
-
-    setBookingError('');
-    setIsSubmittingBooking(true);
-
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      const orderCode = generateOrderCode();
-      const booking: BookingInsert = {
-        order_code: orderCode,
-        customer_name: bookingForm.customerName.trim(),
-        phone: normalizePhone(bookingForm.phone),
-        product_id: selectedProduct.id,
-        product_name: selectedProduct.name,
-        weight_kg: weightKg,
-        cut_style: bookingForm.cutStyle,
-        pickup_time: pickupTime,
-        request_invoice: bookingForm.requestInvoice,
-        status: 'pending',
-      };
-
-      const {error} = await supabase.from('bookings').insert(booking);
-
-      if (isDuplicateOrderCode(error)) {
-        continue;
-      }
-
-      setIsSubmittingBooking(false);
-
-      if (error) {
-        setBookingError(error.message);
-        return;
-      }
-
-      const message = buildBookingMessage(orderCode, selectedProduct, bookingForm);
-      setBookingResult({orderCode, message});
-      window.open(buildWhatsappLink(message), '_blank', 'noopener,noreferrer');
-      return;
-    }
-
-    setIsSubmittingBooking(false);
-    setBookingError('Could not create a fresh order number. Please try once more.');
-  }
-
-  async function checkLoyalty(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const phone = loyalty.phone.trim();
-
-    if (!phone) {
-      setLoyalty((current) => ({...current, error: 'Enter a phone number first.'}));
-      return;
-    }
-
-    if (!isSupabaseConfigured) {
-      setLoyalty((current) => ({
-        ...current,
-        totalKg: 0,
-        error: 'Loyalty check is paused. Ask at the counter with this phone number.',
-      }));
-      return;
-    }
-
-    setLoyalty((current) => ({...current, isLoading: true, error: ''}));
-
-    const {data, error} = await supabase.rpc('get_loyalty_by_phone', {input_phone: phone});
-    const firstRow = Array.isArray(data) ? data[0] : null;
-
-    setLoyalty((current) => ({
-      ...current,
-      isLoading: false,
-      totalKg: error ? null : Number(firstRow?.total_kg ?? 0),
-      error: error?.message ?? '',
-    }));
   }
 
   return (
-    <div className="site-shell">
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
+    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#231917] selection:bg-[#A83A2F]/20 selection:text-[#A83A2F]">
+      {/* Accessible Polite Live Region for Screen Readers */}
+      <div className="visually-hidden" aria-live="polite" role="status">
+        {ariaAnnouncement}
+      </div>
 
-      <SiteHeader
-        activePath={activePath}
-        callLink={callLink}
-        generalOrderMessage={generalOrderMessage}
-        isOpenNow={isOpenNow}
-        navigateTo={navigateTo}
-      />
-      <main id="main-content">
-        {activePath === '/' && (
-          <HomePage
-            callLink={callLink}
-            generalOrderMessage={generalOrderMessage}
-            isOpenNow={isOpenNow}
-            navigateTo={navigateTo}
-          />
+      {/* Top Header: Reflections Frosted Glass Navigation Bar */}
+      <header className="sticky top-0 z-40 bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#E6DEC8] transition-shadow">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          {/* Logo & Brand Identity */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <img
+                src={logoUrl}
+                alt="Bikash Chicken Point Logo"
+                className="w-11 h-11 rounded-full object-cover shadow-sm border border-[#E6DEC8] ring-2 ring-[#A83A2F]/10"
+                width="44"
+                height="44"
+                fetchPriority="high"
+              />
+              <span
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                  isShopOpen ? 'bg-[#15803D]' : 'bg-[#D99B26]'
+                }`}
+                title={isShopOpen ? 'Open now' : 'Pre-orders only'}
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-extrabold text-lg tracking-tight text-[#872B22]">
+                  {siteData.shopName}
+                </span>
+                <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#A83A2F]/10 text-[#A83A2F]">
+                  {siteData.shopNameBengali}
+                </span>
+              </div>
+              <p className="text-xs text-[#665852] flex items-center gap-1.5 mt-0.5">
+                <MapPin className="w-3.5 h-3.5 text-[#A83A2F]" />
+                <span>Sabji Market, Fuljhore, Durgapur-713206</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Header Action Buttons */}
+          <div className="flex items-center gap-2">
+            <span
+              className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-[var(--radius-chip)] ${
+                isShopOpen
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isShopOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              {isShopOpen ? 'Counter Open (8 AM - 9 PM)' : 'Pre-orders Accepted'}
+            </span>
+
+            <a
+              href={`tel:${siteData.phone}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-[#231917] transition-all hover-lift active-press"
+              aria-label="Call shop owner"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#A83A2F]" />
+              <span className="hidden md:inline">Call Shop</span>
+            </a>
+
+            <button
+              onClick={() => setActiveTab('admin')}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-[var(--radius-chip)] text-[#665852] hover:text-[#231917] hover:bg-[#F3EFE6] transition-colors"
+              title="Owner Admin Dashboard"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Admin</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation Tabs with Reflections Spring Active State */}
+        <nav className="max-w-5xl mx-auto px-4 flex gap-4 border-t border-[#E6DEC8]/60 text-xs font-medium">
+          <button
+            onClick={() => setActiveTab('shop')}
+            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
+              activeTab === 'shop'
+                ? 'border-[#A83A2F] text-[#872B22] font-bold'
+                : 'border-transparent text-[#665852] hover:text-[#231917]'
+            }`}
+          >
+            <Utensils className="w-3.5 h-3.5" />
+            Menu & Pre-Book
+          </button>
+          <button
+            onClick={() => setActiveTab('qr')}
+            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
+              activeTab === 'qr'
+                ? 'border-[#A83A2F] text-[#872B22] font-bold'
+                : 'border-transparent text-[#665852] hover:text-[#231917]'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            Counter QR & Location
+          </button>
+          <button
+            onClick={() => setActiveTab('bulk')}
+            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
+              activeTab === 'bulk'
+                ? 'border-[#A83A2F] text-[#872B22] font-bold'
+                : 'border-transparent text-[#665852] hover:text-[#231917]'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Bulk & B2B Orders
+          </button>
+        </nav>
+      </header>
+
+      {/* Main Content Container */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+        {activeTab === 'shop' && (
+          <div className="space-y-8">
+            {/* Hero Section: Editorial Paper Wash & Brand Identity */}
+            <section className="relative overflow-hidden rounded-[var(--radius-panel)] bg-gradient-to-br from-[#872B22] via-[#9E3329] to-[#A83A2F] text-white p-6 sm:p-8 shadow-md">
+              <div className="relative z-10 max-w-2xl space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[var(--radius-chip)] bg-white/15 text-white/95 text-xs font-semibold backdrop-blur-sm border border-white/10">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D99B26]" />
+                  <span>{siteData.hero.eyebrow}</span>
+                  <span className="opacity-75">· Fuljhore Sabji Market</span>
+                </div>
+
+                <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white">
+                  {siteData.hero.title}
+                </h1>
+
+                <p className="text-sm sm:text-base text-white/90 leading-relaxed max-w-xl">
+                  {siteData.hero.subtitle}
+                </p>
+
+                <div className="pt-2 flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => openPreBook()}
+                    variant="primary"
+                    tone="gold"
+                    size="md"
+                    className="shadow-md"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Pre-Book for Pickup
+                  </Button>
+
+                  <a
+                    href={`https://wa.me/${siteData.whatsapp}?text=Hello%20Bikash%20Da,%20what%20is%20today's%20chicken%20rate%20at%20Fuljhore%20shop?`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-all hover-lift active-press shadow-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Ask Rate on WhatsApp
+                  </a>
+                </div>
+
+                {/* 2-Min Pickup Trust Guarantee Cue */}
+                <div className="pt-3 border-t border-white/20 flex items-center gap-2 text-xs text-white/90">
+                  <CheckCircle2 className="w-4 h-4 text-[#D99B26] flex-shrink-0" />
+                  <span>{siteData.fastTrack.english} ({siteData.fastTrack.bengali})</span>
+                </div>
+              </div>
+
+              {/* Watermark shop logo in background */}
+              <div
+                className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 pointer-events-none bg-contain bg-no-repeat bg-right-bottom"
+                style={{ backgroundImage: `url(${logoUrl})` }}
+                aria-hidden="true"
+              />
+            </section>
+
+            {/* Daily Counter Rate Transparency Notice */}
+            <Surface variant="bezel" className="p-4 flex items-start gap-3.5 bg-[#FAF7F2]">
+              <Info className="w-5 h-5 text-[#A83A2F] flex-shrink-0 mt-0.5" />
+              <div className="text-xs sm:text-sm text-[#231917] space-y-1">
+                <p className="font-bold text-[#872B22]">
+                  Live Counter Rate Transparency Notice / প্রতিদিনের দর বিজ্ঞপ্তি:
+                </p>
+                <p className="text-[#665852] leading-relaxed">
+                  Prices update daily based on local market rates. To guarantee accuracy, please confirm the final weight and amount at the shop counter upon walk-in pickup before making your UPI/cash payment.
+                </p>
+              </div>
+            </Surface>
+
+            {/* Product Cards using CSS Container Query & Reflections Surface */}
+            <section className="space-y-4">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <h2 className="font-display text-xl sm:text-2xl font-extrabold text-[#231917]">
+                    Today's Fresh Cuts & Counter Menu
+                  </h2>
+                  <p className="text-xs text-[#665852]">
+                    Select any cut to customize weight and reserve for counter pickup
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-medium text-[#665852] bg-[#F3EFE6] px-2.5 py-1 rounded-[var(--radius-chip)] border border-[#E6DEC8]">
+                  {fallbackProducts.filter(p => p.is_available).length} cuts ready
+                </span>
+              </div>
+
+              {/* Product Grid Container */}
+              <div className="product-grid-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {fallbackProducts.map(product => {
+                  const details = siteData.menuDetails[product.id as keyof typeof siteData.menuDetails];
+                  return (
+                    <article
+                      key={product.id}
+                      className="product-card surface-paper p-5 flex flex-col justify-between transition-all duration-200 hover-lift"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-display font-bold text-base text-[#231917]">
+                              {product.name}
+                            </h3>
+                            <p className="font-bengali text-xs font-semibold text-[#872B22]">
+                              {product.name_bengali}
+                            </p>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-[var(--radius-chip)] uppercase tracking-wider ${
+                              product.is_available
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : 'bg-stone-100 text-stone-500 border border-stone-200'
+                            }`}
+                          >
+                            {product.is_available ? 'Available' : 'Check Counter'}
+                          </span>
+                        </div>
+
+                        {details && (
+                          <p className="text-xs text-[#665852] line-clamp-2 leading-relaxed">
+                            {details.detail}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-4 mt-3 border-t border-[#E6DEC8]/60 flex items-center justify-between">
+                        <div>
+                          <span className="text-[11px] text-[#665852] block font-medium">Counter Rate</span>
+                          <span className="text-lg font-extrabold font-mono text-[#872B22] tabular-nums">
+                            ₹{product.price_per_kg}
+                            <span className="text-xs font-normal text-[#665852]">/kg</span>
+                          </span>
+                        </div>
+
+                        <Button
+                          onClick={() => openPreBook(product)}
+                          disabled={!product.is_available}
+                          variant={product.is_available ? 'primary' : 'secondary'}
+                          size="sm"
+                        >
+                          <span>Pre-Book</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* How Walk-in Pickup Works */}
+            <Surface variant="paper" className="p-6 space-y-4">
+              <h2 className="font-display text-lg sm:text-xl font-bold text-[#231917]">
+                How Pre-Booked Walk-in Pickup Works
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {siteData.orderSteps.map((step, idx) => (
+                  <div key={idx} className="p-4 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#E6DEC8]/80 space-y-2">
+                    <span className="w-7 h-7 rounded-full bg-[#872B22] text-white text-xs font-bold flex items-center justify-center">
+                      0{idx + 1}
+                    </span>
+                    <h3 className="font-display font-semibold text-sm text-[#231917]">
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-[#665852] leading-relaxed">
+                      {step.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            {/* FAQs in English & Bengali */}
+            <section className="space-y-4">
+              <div>
+                <span className="text-xs font-bold text-[#A83A2F] uppercase tracking-wider">
+                  {siteData.faqSection.eyebrow}
+                </span>
+                <h2 className="font-display text-xl sm:text-2xl font-extrabold text-[#231917]">
+                  {siteData.faqSection.title}
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {siteData.faqs.map(faq => (
+                  <Surface key={faq.id} variant="paper" className="p-4 space-y-2">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#F3EFE6] text-[#872B22] font-bold">
+                      {faq.tag}
+                    </span>
+                    <h3 className="font-bold text-sm text-[#231917]">
+                      {faq.question}
+                    </h3>
+                    <p className="font-bengali text-xs font-semibold text-[#872B22]">
+                      {faq.questionBengali}
+                    </p>
+                    <p className="text-xs text-[#665852] pt-1 border-t border-[#E6DEC8]/50 leading-relaxed">
+                      {faq.answer}
+                    </p>
+                    <p className="font-bengali text-xs text-[#665852]">
+                      {faq.answerBengali}
+                    </p>
+                  </Surface>
+                ))}
+              </div>
+            </section>
+          </div>
         )}
-        {activePath === '/menu' && (
-          <MenuPage
-            isLoadingProducts={isLoadingProducts}
-            onBook={openBooking}
-            productError={productError}
-            products={products}
-            rateStatus={rateStatus}
-          />
+
+        {/* Tab 2: Counter QR & Location */}
+        {activeTab === 'qr' && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-[#231917]">
+                Shop Counter QR & Directions
+              </h1>
+              <p className="text-xs text-[#665852]">
+                Sabji Market, Fuljhore, Durgapur-713206, West Bengal
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* PhonePe UPI Standee QR */}
+              <Surface variant="paper" className="p-6 text-center space-y-4">
+                <div className="inline-flex p-2.5 rounded-full bg-[#15803D]/10 text-[#15803D]">
+                  <QrCode className="w-8 h-8" />
+                </div>
+                <div>
+                  <h2 className="font-display text-lg font-bold text-[#231917]">
+                    PhonePe / UPI Counter QR
+                  </h2>
+                  <p className="text-xs text-[#665852]">
+                    Scan directly at the counter during pickup
+                  </p>
+                </div>
+                <div className="max-w-[220px] mx-auto p-3 bg-[#FAF7F2] rounded-[var(--radius-control)] border border-[#E6DEC8]">
+                  <img
+                    src={paymentQrUrl}
+                    alt="Bikash Chicken Point PhonePe Payment QR"
+                    className="w-full h-auto rounded-lg"
+                    width="220"
+                    height="220"
+                  />
+                </div>
+                <div className="text-xs text-[#665852] space-y-1">
+                  <p className="font-mono font-medium">UPI ID: {siteData.upiId}</p>
+                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-[var(--radius-chip)] border border-amber-200">
+                    ⚠️ Pay only after the final weight is confirmed on the shop weighing scale.
+                  </p>
+                </div>
+              </Surface>
+
+              {/* Google Business Profile & Reviews */}
+              <Surface variant="paper" className="p-6 text-center space-y-4 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="inline-flex p-2.5 rounded-full bg-[#A83A2F]/10 text-[#A83A2F]">
+                    <MapPin className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-[#231917]">
+                      Google Profile & Verified Reviews
+                    </h2>
+                    <p className="text-xs text-[#665852]">
+                      Locate us in Sabji Market or leave a review
+                    </p>
+                  </div>
+                  <div className="max-w-[220px] mx-auto p-3 bg-[#FAF7F2] rounded-[var(--radius-control)] border border-[#E6DEC8]">
+                    <img
+                      src={googleReviewQrUrl}
+                      alt="Bikash Chicken Point Google Profile QR"
+                      className="w-full h-auto rounded-lg"
+                      width="220"
+                      height="220"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <a
+                    href={siteData.googleProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-control)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-xs font-semibold text-[#231917] transition-all hover-lift active-press"
+                  >
+                    <span>Open on Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </Surface>
+            </div>
+
+            {/* Shop Details & Udyam Registration */}
+            <div className="bg-[#FAF7F2] border border-[#E6DEC8] rounded-[var(--radius-control)] p-4 text-xs text-[#665852] flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <span className="font-semibold text-[#231917]">MSME Registration:</span>{' '}
+                <span className="font-mono">{siteData.udyamRegistrationNumber}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-[#231917]">Counter Timing:</span>{' '}
+                <span>{siteData.timing}</span>
+              </div>
+            </div>
+          </div>
         )}
-        {activePath === '/bulk-loyalty' && (
-          <BulkLoyaltyPage
-            loyalty={loyalty}
-            onCheckLoyalty={checkLoyalty}
-            products={products}
-            rateStatus={rateStatus}
-            setLoyalty={setLoyalty}
-          />
-        )}
-        {activePath === '/visit-help' && (
-          <VisitHelpPage
-            callLink={callLink}
-            generalOrderMessage={generalOrderMessage}
-            openFaq={openFaq}
-            setOpenFaq={setOpenFaq}
-          />
+
+        {/* Tab 3: Bulk & B2B Orders */}
+        {activeTab === 'bulk' && (
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div>
+              <span className="text-xs font-bold text-[#A83A2F] uppercase tracking-wider">
+                {siteData.b2b.eyebrow}
+              </span>
+              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#231917]">
+                {siteData.b2b.title}
+              </h1>
+              <p className="text-sm text-[#665852] mt-2 leading-relaxed">
+                {siteData.b2b.body}
+              </p>
+              <p className="font-bengali text-xs text-[#872B22] mt-1 font-semibold">
+                {siteData.b2b.bodyBengali}
+              </p>
+            </div>
+
+            <Surface variant="paper" className="p-6 space-y-4">
+              <h2 className="font-display text-base font-bold text-[#231917]">
+                Wholesale & Commercial Invoicing Benefits
+              </h2>
+              <ul className="text-xs text-[#665852] space-y-2.5">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <span>Fresh daily dressing cut to your specific culinary requirements</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <span>GST-compliant business invoice generated for tax accounting</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <span>Dedicated counter pickup line so your kitchen prep isn't delayed</span>
+                </li>
+              </ul>
+
+              <div className="pt-4 border-t border-[#E6DEC8]">
+                <a
+                  href={`https://wa.me/${siteData.whatsapp}?text=Hello%20Bikash%20Da,%20I%20am%20inquiring%20about%20a%20bulk/commercial%20chicken%20order%20with%20GST%20invoice.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-all hover-lift active-press shadow-xs"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Connect for Bulk Rates on WhatsApp
+                </a>
+              </div>
+            </Surface>
+          </div>
         )}
       </main>
 
-      <Footer
-        callLink={callLink}
-        generalOrderMessage={generalOrderMessage}
-        navigateTo={navigateTo}
-      />
-
-      {selectedProduct && (
-        <BookingModal
-          product={selectedProduct}
-          form={bookingForm}
-          setForm={setBookingForm}
-          error={bookingError}
-          result={bookingResult}
-          isSubmitting={isSubmittingBooking}
-          rateStatus={rateStatus}
-          onClose={() => setSelectedProduct(null)}
-          onSubmit={submitBooking}
-        />
-      )}
-    </div>
-  );
-}
-
-function handleRouteClick(event: MouseEvent<HTMLAnchorElement>, path: PublicPath, navigateTo: NavigateTo) {
-  event.preventDefault();
-  navigateTo(path);
-}
-
-function SiteHeader({
-  activePath,
-  callLink,
-  generalOrderMessage,
-  isOpenNow,
-  navigateTo,
-}: {
-  activePath: PublicPath;
-  callLink: string;
-  generalOrderMessage: string;
-  isOpenNow: boolean;
-  navigateTo: NavigateTo;
-}) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement | null>(null);
-  const firstDrawerLinkRef = useRef<HTMLAnchorElement | null>(null);
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [activePath]);
-
-  useEffect(() => {
-    if (!isMenuOpen) {
-      return;
-    }
-
-    firstDrawerLinkRef.current?.focus();
-
-    function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false);
-        return;
-      }
-
-      if (event.key !== 'Tab' || !drawerRef.current) {
-        return;
-      }
-
-      const focusable = Array.from(
-        drawerRef.current.querySelectorAll('a[href], button:not([disabled])'),
-      ) as HTMLElement[];
-      const firstElement = focusable[0];
-      const lastElement = focusable[focusable.length - 1];
-
-      if (!firstElement || !lastElement) {
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMenuOpen]);
-
-  return (
-    <header className="site-header">
-      <div className="site-container header-inner">
-        <a
-          className="brand-lockup"
-          href="/"
-          aria-label="Bikash Chicken Point home"
-          onClick={(event) => handleRouteClick(event, '/', navigateTo)}
-        >
-          <img src={logoUrl} alt="" className="brand-logo" width="64" height="64" />
-          <span>
-            <span className="brand-name">{siteData.shopName}</span>
-            <span className="brand-subname">{siteData.shopNameBengali}</span>
-          </span>
-        </a>
-
-        <nav className="primary-nav" aria-label="Main navigation">
-          {navItems.map((item) => {
-            const isActive = item.href === activePath;
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
-
-        <div className="header-actions">
-          <span className={`status-pill ${isOpenNow ? 'is-open' : 'is-closed'}`}>
-            <span aria-hidden="true" />
-            {isOpenNow ? 'Open now' : 'Open daily 8 AM'}
-          </span>
-          <a className="icon-button secondary" href={callLink} aria-label={`Call ${siteData.shopName}`}>
-            <Phone size={19} />
-            <span>Call</span>
-          </a>
-          <a className="icon-button whatsapp" href={buildWhatsappLink(generalOrderMessage)}>
-            <MessageCircle size={19} />
-            <span>WhatsApp</span>
-          </a>
-          <button
-            className="mobile-menu-toggle"
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={isMenuOpen}
-            aria-controls="mobile-menu-drawer"
-            onClick={() => setIsMenuOpen((current) => !current)}
-          >
-            <Menu size={22} />
-          </button>
-        </div>
-      </div>
-
-      {isMenuOpen && (
-        <div className="mobile-menu-layer" role="presentation" onClick={() => setIsMenuOpen(false)}>
-          <div
-            id="mobile-menu-drawer"
-            className="mobile-menu-drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Site menu"
-            ref={drawerRef}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mobile-menu-head">
-              <span>
-                <strong>{siteData.shopName}</strong>
-                <small>Sabji Market, Fuljhore</small>
-              </span>
-              <button className="round-icon-button" type="button" onClick={() => setIsMenuOpen(false)} aria-label="Close menu">
-                <X size={20} />
-              </button>
-            </div>
-
-            <nav className="mobile-menu-links" aria-label="Mobile navigation">
-              {navItems.map((item, index) => {
-                const isActive = item.href === activePath;
-                return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    ref={index === 0 ? firstDrawerLinkRef : undefined}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={(event) => handleRouteClick(event, item.href, navigateTo)}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
-            </nav>
-
-            <div className="mobile-menu-actions">
-              <a className="primary-cta compact" href={buildWhatsappLink(generalOrderMessage)}>
-                <MessageCircle size={18} />
-                WhatsApp the shop
-              </a>
-              <a className="plain-link" href={callLink}>
-                <Phone size={18} />
-                Call {siteData.phone}
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-}
-
-function HomePage({
-  callLink,
-  generalOrderMessage,
-  isOpenNow,
-  navigateTo,
-}: {
-  callLink: string;
-  generalOrderMessage: string;
-  isOpenNow: boolean;
-  navigateTo: NavigateTo;
-}) {
-  return (
-    <>
-      <section className="hero-section">
-        <div className="site-container hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">{siteData.hero.eyebrow}</p>
-            <h1>{siteData.hero.title}</h1>
-            <p className="hero-subtitle">{siteData.hero.subtitle}</p>
-
-            <div className="fast-track-badge" aria-label="Fast track pickup">
-              <Clock size={19} />
-              <span>{siteData.fastTrack.english}</span>
-              <strong>{siteData.fastTrack.bengali}</strong>
-            </div>
-
-            <div className="hero-actions" aria-label="Primary ordering actions">
-              <a className="primary-cta" href="/menu" onClick={(event) => handleRouteClick(event, '/menu', navigateTo)}>
-                <ShoppingBag size={21} />
-                Pre-Book for Pickup
-              </a>
-              <a className="plain-link" href={buildWhatsappLink(generalOrderMessage)}>
-                <MessageCircle size={19} />
-                WhatsApp rate check
-              </a>
-              <a className="plain-link" href={callLink}>
-                <Phone size={19} />
-                Call now
-              </a>
-            </div>
-          </div>
-
-          <div className="hero-panel" aria-label="Shop details">
-            <img src={logoUrl} alt={`${siteData.shopName} logo`} className="hero-logo" />
-            <div className="hero-detail-list">
-              <p>
-                <MapPin size={18} />
-                <span>{siteData.address}</span>
-              </p>
-              <p>
-                <Clock size={18} />
-                <span>{isOpenNow ? 'Open now for pickup' : siteData.timing}</span>
-              </p>
-              <p>
-                <ShoppingBag size={18} />
-                <span>{siteData.pickupNote}</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="proof-strip" aria-label="Shop promises">
-        <div className="site-container proof-grid">
-          <p>
-            <CheckCircle2 size={18} />
-            Walk-in pickup only
-          </p>
-          <p>
-            <CheckCircle2 size={18} />
-            Cut after pre-booking
-          </p>
-          <p>
-            <CheckCircle2 size={18} />
-            WhatsApp order number
-          </p>
-        </div>
-      </section>
-
-      <section className="section-block order-section">
-        <div className="site-container order-grid">
-          <div className="section-heading align-left">
-            <p className="eyebrow">How pickup works</p>
-            <h2>Fast counter pickup, no prepaid checkout.</h2>
-            <p>
-              This is built for the market rush. Pre-book, get your four digit order number,
-              then pay after the counter confirms weight and amount.
-            </p>
-            <a className="plain-link" href="/visit-help" onClick={(event) => handleRouteClick(event, '/visit-help', navigateTo)}>
-              <MapPin size={18} />
-              Find the shop
-            </a>
-          </div>
-
-          <div className="order-steps">
-            {siteData.orderSteps.map((step, index) => (
-              <article key={step.title} className="order-step">
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-function MenuPage({
-  isLoadingProducts,
-  onBook,
-  productError,
-  products,
-  rateStatus,
-}: {
-  isLoadingProducts: boolean;
-  onBook: (product: Product) => void;
-  productError: string;
-  products: Product[];
-  rateStatus: RateStatus;
-}) {
-  return (
-    <section id="menu" className="section-block menu-section page-section">
-      <div className="site-container">
-        <div className="section-heading">
-          <p className="eyebrow">Live Menu / আজকের রেট</p>
-          <h2>Choose the cut you need.</h2>
-          <p>
-            Counter rates are updated by the shop. Pick weight, cut style, and time before you leave.
-          </p>
-          <p className={`rate-status ${rateStatus.isTrusted ? '' : 'is-unconfirmed'}`}>
-            <Clock size={17} />
-            <span>{rateStatus.label}</span>
-            <small>{rateStatus.detail}</small>
-          </p>
-        </div>
-
-        {productError && (
-          <p className="inline-alert" role="alert" aria-live="polite">
-            {productError}
-          </p>
-        )}
-
-        <div className="menu-list">
-          {isLoadingProducts
-            ? Array.from({length: 4}, (_, index) => (
-                <article className="menu-item skeleton-item" key={index}>
-                  <span />
-                  <span />
-                </article>
-              ))
-            : products.map((product) => (
-                <MenuProductCard key={product.id} product={product} rateStatus={rateStatus} onBook={onBook} />
-              ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function BulkLoyaltyPage({
-  loyalty,
-  onCheckLoyalty,
-  products,
-  rateStatus,
-  setLoyalty,
-}: {
-  loyalty: LoyaltyState;
-  onCheckLoyalty: (event: FormEvent<HTMLFormElement>) => void;
-  products: Product[];
-  rateStatus: RateStatus;
-  setLoyalty: (state: LoyaltyState) => void;
-}) {
-  return (
-    <>
-      <B2BSection products={products} rateStatus={rateStatus} />
-      <LoyaltySection loyalty={loyalty} setLoyalty={setLoyalty} onCheck={onCheckLoyalty} />
-    </>
-  );
-}
-
-function VisitHelpPage({
-  callLink,
-  generalOrderMessage,
-  openFaq,
-  setOpenFaq,
-}: {
-  callLink: string;
-  generalOrderMessage: string;
-  openFaq: number;
-  setOpenFaq: (index: number) => void;
-}) {
-  return (
-    <>
-      <LocationSection callLink={callLink} generalOrderMessage={generalOrderMessage} />
-      <GoogleReviewSection callLink={callLink} />
-      <FaqSection openFaq={openFaq} setOpenFaq={setOpenFaq} callLink={callLink} />
-    </>
-  );
-}
-
-function MenuProductCard({
-  product,
-  rateStatus,
-  onBook,
-}: {
-  key?: string;
-  product: Product;
-  rateStatus: RateStatus;
-  onBook: (product: Product) => void;
-}) {
-  const detail = getProductDetail(product.id);
-
-  return (
-    <article className={`menu-item ${product.is_available ? '' : 'is-unavailable'}`}>
-      <div>
-        <div className="menu-title-row">
-          <h3>{product.name}</h3>
-          <span>{detail?.note ?? (product.is_available ? 'Available' : 'Ask first')}</span>
-        </div>
-        <p className="bengali-name">{product.name_bengali}</p>
-        <p>{detail?.detail ?? 'Fresh cut from the shop counter.'}</p>
-      </div>
-      <div className="menu-action">
-        <span className={rateStatus.isTrusted ? '' : 'rate-unconfirmed'}>
-          {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : "Call to confirm today's rate"}
-        </span>
-        <small>{rateStatus.isTrusted ? detail?.weight : 'WhatsApp before leaving'}</small>
-        <button
-          type="button"
-          disabled={!product.is_available}
-          onClick={() => onBook(product)}
-          aria-label={`${product.is_available ? 'Pre-book' : 'Not available'} ${product.name}`}
-        >
-          {product.is_available ? 'Pre-Book for Pickup' : 'Not available now'}
-          <ShoppingBag size={17} />
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function BookingModal({
-  product,
-  form,
-  setForm,
-  error,
-  result,
-  isSubmitting,
-  rateStatus,
-  onClose,
-  onSubmit,
-}: {
-  product: Product;
-  form: BookingFormState;
-  setForm: (form: BookingFormState) => void;
-  error: string;
-  result: BookingResult | null;
-  isSubmitting: boolean;
-  rateStatus: RateStatus;
-  onClose: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  const sheetRef = useRef<HTMLElement | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const onCloseRef = useRef(onClose);
-  const bookingWeight = getBookingWeight(form);
-  const pickupTime = getPickupTime(form);
-  const selectedCut = cutStyleOptions.find((option) => option.value === form.cutStyle) ?? cutStyleOptions[0];
-  const rateLine = rateStatus.isTrusted ? `${formatPrice(product.price_per_kg)} before final counter weight` : rateStatus.label;
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    closeButtonRef.current?.focus();
-
-    function handleKeyDown(event: globalThis.KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onCloseRef.current();
-        return;
-      }
-
-      if (event.key !== 'Tab' || !sheetRef.current) {
-        return;
-      }
-
-      const focusable = Array.from(
-        sheetRef.current.querySelectorAll('a[href], button:not([disabled]), input:not([disabled])'),
-      ) as HTMLElement[];
-      const firstElement = focusable[0];
-      const lastElement = focusable[focusable.length - 1];
-
-      if (!firstElement || !lastElement) {
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      }
-    }
-
-    document.body.classList.add('has-modal');
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.classList.remove('has-modal');
-      document.removeEventListener('keydown', handleKeyDown);
-      previousActiveElement?.focus();
-    };
-  }, []);
-
-  return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <section
-        className="booking-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="booking-title"
-        ref={sheetRef}
-        onMouseDown={(event) => event.stopPropagation()}
+      {/* Floating Mobile Action Bar (Dynamic Viewport Safe) */}
+      <aside
+        className="md:hidden sticky bottom-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E6DEC8] px-4 py-2.5 shadow-lg"
+        aria-label="Quick mobile actions"
       >
-        <div className="sheet-header">
-          <div>
-            <p className="eyebrow">{siteData.booking.titleBengali}</p>
-            <h2 id="booking-title">{siteData.booking.title}</h2>
-            <p>
-              {product.name} · {product.name_bengali} · {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : 'Rate to be confirmed at counter'}
-            </p>
-          </div>
-          <button
-            className="round-icon-button"
-            type="button"
-            onClick={onClose}
-            aria-label="Close booking form"
-            ref={closeButtonRef}
+        <div className="flex items-center gap-3">
+          <a
+            href={`tel:${siteData.phone}`}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-[var(--radius-control)] bg-[#F3EFE6] text-[#231917] font-semibold text-xs active:scale-98 transition-all"
           >
-            <X size={20} />
-          </button>
-        </div>
+            <Phone className="w-3.5 h-3.5 text-[#A83A2F]" />
+            <span>Call Shop</span>
+          </a>
 
-        {result ? (
-          <div className="booking-success" role="status" aria-live="polite">
-            <CheckCircle2 size={34} />
-            <h3>Order #{result.orderCode} sent to WhatsApp</h3>
-            <p className="booking-success-note">
-              Keep this number handy at the counter. আমরা অর্ডার নম্বর দেখে প্যাকেট মিলিয়ে দেব।
-            </p>
-            <p>{result.message}</p>
-            <a className="primary-cta compact" href={buildWhatsappLink(result.message)}>
-              <MessageCircle size={18} />
-              Open WhatsApp again
-            </a>
-            <article className="booking-payment-panel">
-              <div>
-                <p className="eyebrow">Payment after counter</p>
-                <h3>Pay after we confirm your order.</h3>
-                <p>
-                  Scan the UPI QR only after we confirm order number, final weight, and amount at the shop.
-                </p>
-                <p className="upi-line">
-                  <Banknote size={18} />
-                  UPI shown on QR: <strong>{siteData.upiId}</strong>
-                </p>
-              </div>
-              <div className="qr-card payment-qr-card">
-                <img src={paymentQrUrl} alt={`UPI payment QR for ${siteData.shopName}`} loading="lazy" />
-              </div>
-            </article>
+          <Button
+            onClick={() => openPreBook()}
+            variant="primary"
+            tone="crimson"
+            size="md"
+            className="flex-[2] text-xs"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Pre-Book Pickup</span>
+          </Button>
+        </div>
+      </aside>
+
+      {/* Modern Adaptive ModalSheet for Pre-Booking */}
+      <ModalSheet
+        isOpen={isSheetOpen}
+        onClose={closePreBook}
+        title={
+          <div className="flex items-center gap-2">
+            <span>{siteData.booking.title}</span>
+            <span className="font-bengali text-xs font-semibold text-[#872B22]">
+              {siteData.booking.titleBengali}
+            </span>
+          </div>
+        }
+        subtitle="Ready in 2 mins at Fuljhore counter · Pay upon weight confirmation"
+      >
+        {orderConfirmed ? (
+          <div className="text-center py-6 space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-[#231917]">
+                Pre-Booking #{orderConfirmed.code} Ready
+              </h3>
+              <p className="text-xs text-[#665852] mt-1 max-w-sm mx-auto">
+                {orderConfirmed.message}
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-center gap-3">
+              <Button
+                onClick={closePreBook}
+                variant="secondary"
+                size="sm"
+              >
+                Done
+              </Button>
+            </div>
           </div>
         ) : (
-          <form className="booking-form" onSubmit={onSubmit} aria-live="polite">
-            <p className="booking-counter-note">
-              Pay after the counter confirms final weight and rate. No prepaid checkout here.
-            </p>
-            <label>
-              <span>Name / নাম</span>
-              <input
-                value={form.customerName}
-                onChange={(event) => setForm({...form, customerName: event.target.value})}
-                placeholder="Your name"
-              />
-            </label>
-
-            <label>
-              <span>Phone / ফোন</span>
-              <input
-                value={form.phone}
-                onChange={(event) => setForm({...form, phone: event.target.value})}
-                inputMode="tel"
-                placeholder="10 digit number"
-              />
-            </label>
-
-            <div className="field-group">
-              <span>Weight / ওজন</span>
-              <div className="segmented-grid">
-                {weightOptions.map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    className={form.weightKg === option.value && !form.customWeight ? 'is-selected' : ''}
-                    onClick={() => setForm({...form, weightKg: option.value, customWeight: ''})}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <input
-                value={form.customWeight}
-                onChange={(event) => setForm({...form, customWeight: event.target.value})}
-                inputMode="decimal"
-                placeholder="Custom kg"
-              />
-            </div>
-
-            <div className="field-group">
-              <span>Cut Style / কাট</span>
-              <div className="segmented-grid">
-                {cutStyleOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={form.cutStyle === option.value ? 'is-selected' : ''}
-                    onClick={() => setForm({...form, cutStyle: option.value})}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="field-group">
-              <span>Pickup Time / পিকআপ সময়</span>
-              <div className="segmented-grid">
-                {pickupOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={form.pickupTime === option.value && !form.customPickupTime ? 'is-selected' : ''}
-                    onClick={() => setForm({...form, pickupTime: option.value, customPickupTime: ''})}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <input
-                value={form.customPickupTime}
-                onChange={(event) => setForm({...form, customPickupTime: event.target.value})}
-                placeholder="Custom time, e.g. 6:30 PM"
-              />
-            </div>
-
-            <label className="toggle-row">
-              <input
-                type="checkbox"
-                checked={form.requestInvoice}
-                onChange={(event) => setForm({...form, requestInvoice: event.target.checked})}
-              />
-              <span>
-                <strong>{siteData.booking.invoiceLabel}</strong>
-                <small>{siteData.booking.invoiceLabelBengali}</small>
-              </span>
-            </label>
-
-            <div className="booking-order-summary" aria-live="polite">
-              <span>Order summary</span>
-              <strong>
-                {formatWeight(bookingWeight)} {selectedCut.whatsappLabel} · {pickupTime}
-              </strong>
-              <small>{rateLine}</small>
-            </div>
-
-            {error && (
-              <p className="form-error" role="alert" aria-live="polite">
-                {error}
-              </p>
-            )}
-
-            <button className="primary-cta submit-booking" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="spin" size={19} /> : <MessageCircle size={19} />}
-              Confirm and Open WhatsApp
-            </button>
-          </form>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function B2BSection({products, rateStatus}: {products: Product[]; rateStatus: RateStatus}) {
-  return (
-    <section className="section-block b2b-section" id="b2b">
-      <div className="site-container b2b-grid">
-        <div className="section-heading align-left">
-          <p className="eyebrow">{siteData.b2b.eyebrow}</p>
-          <h2>{siteData.b2b.title}</h2>
-          <p>{siteData.b2b.body}</p>
-          <p className="bengali-name">{siteData.b2b.bodyBengali}</p>
-          <div className="b2b-action-row">
-            <p className="udyam-line">
-              <FileText size={18} />
-              UDYAM: <strong>{siteData.udyamRegistrationNumber}</strong>
-            </p>
-            <button className="primary-cta compact" type="button" onClick={() => window.print()}>
-              <Download size={18} />
-              Download Rate Card
-            </button>
-          </div>
-          <p className="invoice-note">
-            Tick <strong>{siteData.booking.invoiceLabel}</strong> while pre-booking.
-          </p>
-          <p className={`rate-status ${rateStatus.isTrusted ? '' : 'is-unconfirmed'}`}>
-            <Clock size={17} />
-            <span>{rateStatus.label}</span>
-            <small>{rateStatus.detail}</small>
-          </p>
-        </div>
-
-        <div className="rate-card" aria-label="Current B2B rate card">
-          <div>
-            <h3>Rate card / রেট কার্ড</h3>
-            <p>Current pickup counter rates</p>
-          </div>
-          <ul>
-            {products.map((product) => (
-              <li key={product.id}>
-                <span>{product.name}</span>
-                <strong className={rateStatus.isTrusted ? '' : 'rate-unconfirmed'}>
-                  {rateStatus.isTrusted ? formatPrice(product.price_per_kg) : 'Call to confirm'}
-                </strong>
-              </li>
-            ))}
-          </ul>
-          <p>UDYAM: {siteData.udyamRegistrationNumber}</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function LoyaltySection({
-  loyalty,
-  setLoyalty,
-  onCheck,
-}: {
-  loyalty: LoyaltyState;
-  setLoyalty: (state: LoyaltyState) => void;
-  onCheck: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  const totalKg = loyalty.totalKg ?? 0;
-  const progress = Math.min((totalKg / 10) * 100, 100);
-
-  return (
-    <section className="section-block loyalty-section" id="loyalty">
-      <div className="site-container loyalty-grid">
-        <div className="section-heading align-left">
-          <p className="eyebrow">Loyalty Check / লয়্যালটি</p>
-          <h2>Digital Stamp Card: {totalKg.toFixed(1)}/10 kg</h2>
-          <p>
-            Enter the same phone number used for pre-booking. Every saved booking adds to the total.
-          </p>
-        </div>
-
-        <form className="loyalty-card" onSubmit={onCheck}>
-          <Stamp size={34} />
-          <label>
-            <span>Phone number / ফোন নম্বর</span>
-            <input
-              value={loyalty.phone}
-              onChange={(event) => setLoyalty({...loyalty, phone: event.target.value})}
-              inputMode="tel"
-              placeholder="Enter phone number"
-            />
-          </label>
-          <div className="stamp-meter" aria-label={`${totalKg.toFixed(1)} kilograms out of 10`}>
-            <span style={{width: `${progress}%`}} />
-          </div>
-          {loyalty.error && (
-            <p className="form-error" role="alert" aria-live="polite">
-              {loyalty.error}
-            </p>
-          )}
-          <button className="plain-link" type="submit" disabled={loyalty.isLoading}>
-            {loyalty.isLoading ? <Loader2 className="spin" size={18} /> : <Stamp size={18} />}
-            Loyalty Check
-          </button>
-        </form>
-      </div>
-    </section>
-  );
-}
-
-function GoogleReviewSection({callLink}: {callLink: string}) {
-  return (
-    <section className="section-block action-section" id="review">
-      <div className="site-container">
-        <article className="qr-panel review-panel google-review-panel">
-          <div className="qr-copy">
-            <p className="eyebrow">Google Business</p>
-            <h2>Scan the Google QR after your order.</h2>
-            <p>
-              A short review helps nearby families find the shop. Scan the QR, or
-              open the listing directly if you are already on your phone.
-            </p>
-            <p className="upi-line">
-              <QrCode size={18} />
-              Opens the shop profile on Google
-            </p>
-            <div className="faq-help-actions">
-              <a className="plain-link listing-link" href={siteData.googleProfileUrl} target="_blank" rel="noreferrer">
-                Open Google listing
-                <ExternalLink size={17} />
-              </a>
-              <a className="plain-link" href={callLink}>
-                <Phone size={17} />
-                Call shop
-              </a>
-            </div>
-          </div>
-          <div className="qr-card google-qr-card">
-            <img
-              src={googleReviewQrUrl}
-              alt={`Google Business Profile QR for ${siteData.shopName}`}
-              loading="lazy"
-            />
-            <p className="review-thanks">ধন্যবাদ</p>
-          </div>
-        </article>
-      </div>
-    </section>
-  );
-}
-
-function LocationSection({callLink, generalOrderMessage}: {callLink: string; generalOrderMessage: string}) {
-  return (
-    <section className="section-block location-section" id="location">
-      <div className="site-container location-grid">
-        <div>
-          <p className="eyebrow">Visit or pre-book</p>
-          <h2>Find us at Sabji Market, Fuljhore.</h2>
-          <p>
-            Call before coming, or send a WhatsApp message for today&apos;s fresh cuts.
-          </p>
-          <div className="location-actions">
-            <a className="primary-cta compact" href={buildWhatsappLink(generalOrderMessage)}>
-              <MessageCircle size={19} />
-              Message the shop
-            </a>
-            <a className="plain-link" href={callLink}>
-              Call {siteData.phone}
-            </a>
-          </div>
-        </div>
-
-        <div className="map-shell">
-          <iframe
-            title="Bikash Chicken Point location map"
-            src={siteData.mapEmbedUrl}
-            width="100%"
-            height="100%"
-            style={{border: 0}}
-            allowFullScreen={false}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FaqSection({
-  openFaq,
-  setOpenFaq,
-  callLink,
-}: {
-  openFaq: number;
-  setOpenFaq: (index: number) => void;
-  callLink: string;
-}) {
-  return (
-    <section className="section-block faq-section">
-      <div className="site-container faq-shell">
-        <div className="section-heading align-left faq-heading">
-          <p className="eyebrow">{siteData.faqSection.eyebrow}</p>
-          <h2>{siteData.faqSection.title}</h2>
-          <p>{siteData.faqSection.subtitle}</p>
-        </div>
-
-        <div className="faq-grid">
-          <div className="faq-list" aria-label="Common customer questions">
-            {siteData.faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
-              const panelId = `faq-panel-${faq.id}`;
-              const buttonId = `faq-button-${faq.id}`;
-
-              return (
-                <button
-                  id={buttonId}
-                  key={faq.id}
-                  type="button"
-                  className={`faq-trigger ${isOpen ? 'is-active' : ''}`}
-                  aria-expanded={isOpen}
-                  aria-controls={panelId}
-                  onClick={() => setOpenFaq(index)}
-                >
-                  <span className="faq-trigger-copy">
-                    <span className="faq-trigger-title">{faq.question}</span>
-                    <span className="faq-trigger-bengali">{faq.questionBengali}</span>
-                  </span>
-                  <span className="faq-trigger-tag">{faq.tag}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="faq-panels">
-            {siteData.faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
-              const panelId = `faq-panel-${faq.id}`;
-              const buttonId = `faq-button-${faq.id}`;
-              const faqMessage =
-                `Hi ${siteData.shopName}, I have a question about "${faq.question}". ` +
-                `Please help with today's pickup order details.`;
-
-              return (
-                <article className="faq-panel" key={faq.id} hidden={!isOpen}>
-                  <div id={panelId} role="region" aria-labelledby={buttonId}>
-                    <div className="faq-panel-body">
-                      <div className="faq-answer-card">
-                        <p className="faq-answer-label">English</p>
-                        <h3>{faq.question}</h3>
-                        <p>{faq.answer}</p>
-                      </div>
-
-                      <div className="faq-answer-card is-bengali">
-                        <p className="faq-answer-label">বাংলা</p>
-                        <h3>{faq.questionBengali}</h3>
-                        <p>{faq.answerBengali}</p>
-                      </div>
-                    </div>
-
-                    <div className="faq-help">
-                      <div className="faq-help-copy">
-                        <p className="faq-help-title">{siteData.faqSection.helpTitle}</p>
-                        <p>{siteData.faqSection.helpBody}</p>
-                        <p className="faq-help-bengali">{siteData.faqSection.helpBodyBengali}</p>
-                      </div>
-
-                      <div className="faq-help-actions">
-                        <a className="plain-link" href={callLink}>
-                          <Phone size={18} />
-                          Call now
-                        </a>
-                        <a className="primary-cta compact" href={buildWhatsappLink(faqMessage)}>
-                          <MessageCircle size={19} />
-                          Ask on WhatsApp
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Footer({
-  callLink,
-  generalOrderMessage,
-  navigateTo,
-}: {
-  callLink: string;
-  generalOrderMessage: string;
-  navigateTo: NavigateTo;
-}) {
-  return (
-    <footer className="site-footer">
-      <div className="site-container footer-inner">
-        <a
-          className="footer-brand"
-          href="/"
-          aria-label={`${siteData.shopName} home`}
-          onClick={(event) => handleRouteClick(event, '/', navigateTo)}
-        >
-          <img src={logoUrl} alt="" className="footer-logo" width="48" height="48" />
-          <span className="footer-brand-copy">
-            <span className="footer-brand-name">{siteData.shopName}</span>
-            <span className="footer-meta">
-              <MapPin size={14} aria-hidden="true" />
-              Sabji Market, Fuljhore
-            </span>
-          </span>
-        </a>
-
-        <div className="footer-actions" aria-label="Footer contact actions">
-          <a className="footer-action" href={callLink} aria-label={`Call ${siteData.phone}`}>
-            <Phone size={16} aria-hidden="true" />
-            <span className="footer-phone-wide">{siteData.phone}</span>
-            <span className="footer-phone-short">Call</span>
-          </a>
-          <a className="footer-action whatsapp" href={buildWhatsappLink(generalOrderMessage)}>
-            <MessageCircle size={16} aria-hidden="true" />
-            <span>WhatsApp</span>
-          </a>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-function AdminApp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [sessionReady, setSessionReady] = useState(false);
-  const [isSignedIn, setIsSignedIn] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [adminProducts, setAdminProducts] = useState<AdminProductDraft[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [adminError, setAdminError] = useState('');
-
-  useEffect(() => {
-    async function loadSession() {
-      if (!isSupabaseConfigured) {
-        setSessionReady(true);
-        return;
-      }
-
-      const {data} = await supabase.auth.getSession();
-      setIsSignedIn(Boolean(data.session));
-      setSessionReady(true);
-    }
-
-    loadSession();
-  }, []);
-
-  useEffect(() => {
-    if (isSignedIn) {
-      fetchAdminData();
-    }
-  }, [isSignedIn]);
-
-  async function signIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthError('');
-
-    if (!isSupabaseConfigured) {
-      setAuthError('Owner login is not ready on this device.');
-      return;
-    }
-
-    const {error} = await supabase.auth.signInWithPassword({email, password});
-
-    if (error) {
-      setAuthError(error.message);
-      return;
-    }
-
-    setIsSignedIn(true);
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    setIsSignedIn(false);
-    setAdminProducts([]);
-    setBookings([]);
-  }
-
-  async function fetchAdminData() {
-    setAdminError('');
-
-    const [productsResult, bookingsResult] = await Promise.all([
-      supabase
-        .from('products')
-        .select('id,name,name_bengali,price_per_kg,is_available,display_order,updated_at')
-        .order('display_order', {ascending: true}),
-      supabase
-        .from('bookings')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', {ascending: false})
-        .limit(10),
-    ]);
-
-    if (productsResult.error) {
-      setAdminError(productsResult.error.message);
-      return;
-    }
-
-    setAdminProducts(
-      normalizeProducts((productsResult.data ?? []) as Product[]).map((product) => ({
-        ...product,
-        draftPrice: String(Math.round(product.price_per_kg)),
-        saveState: 'idle',
-      })),
-    );
-
-    if (!bookingsResult.error) {
-      setBookings((bookingsResult.data ?? []) as Booking[]);
-    }
-  }
-
-  function updateDraft(productId: string, patch: Partial<AdminProductDraft>) {
-    setAdminProducts((current) =>
-      current.map((product) => (product.id === productId ? {...product, ...patch, saveState: 'idle'} : product)),
-    );
-  }
-
-  async function saveProduct(product: AdminProductDraft) {
-    updateDraft(product.id, {saveState: 'saving'});
-
-    const price = Number(product.draftPrice);
-    const {error} = await supabase
-      .from('products')
-      .update({price_per_kg: price, is_available: product.is_available})
-      .eq('id', product.id);
-
-    updateDraft(product.id, {saveState: error ? 'error' : 'saved'});
-
-    if (!error) {
-      setTimeout(() => updateDraft(product.id, {saveState: 'idle'}), 1400);
-    }
-  }
-
-  if (!sessionReady) {
-    return (
-      <main className="admin-shell">
-        <Loader2 className="spin" />
-      </main>
-    );
-  }
-
-  if (!isSignedIn) {
-    return (
-      <main className="admin-shell">
-        <form className="admin-login" onSubmit={signIn}>
-          <img src={logoUrl} alt="" className="footer-logo" />
-          <p className="eyebrow">Owner Admin</p>
-          <h1>Update today&apos;s rates fast.</h1>
-          <label>
-            <span>Email</span>
-            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" />
-          </label>
-          <label>
-            <span>Password</span>
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" />
-          </label>
-          {authError && (
-            <p className="form-error" role="alert" aria-live="polite">
-              {authError}
-            </p>
-          )}
-          <button className="primary-cta" type="submit">
-            <UserRound size={19} />
-            Sign in
-          </button>
-          <a className="plain-link" href="/">
-            Back to shop
-          </a>
-        </form>
-      </main>
-    );
-  }
-
-  return (
-    <main className="admin-shell">
-      <section className="admin-panel">
-        <div className="admin-header">
-          <div>
-            <p className="eyebrow">/admin</p>
-            <h1>Today&apos;s counter rates</h1>
-            <p>Large controls for quick phone updates.</p>
-          </div>
-          <button className="plain-link" type="button" onClick={signOut}>
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-
-        {adminError && (
-          <p className="form-error" role="alert" aria-live="polite">
-            {adminError}
-          </p>
-        )}
-
-        <div className="admin-product-list">
-          {adminProducts.map((product) => (
-            <article className="admin-product" key={product.id}>
-              <div>
-                <h2>{product.name}</h2>
-                <p>{product.name_bengali}</p>
-              </div>
-              <label>
-                <span>₹ / kg</span>
-                <input
-                  value={product.draftPrice}
-                  onChange={(event) => updateDraft(product.id, {draftPrice: event.target.value})}
-                  inputMode="numeric"
-                />
+          <form onSubmit={handleSubmitOrder} className="space-y-4">
+            {/* Product Selection */}
+            <div className="space-y-1.5">
+              <label htmlFor="product-select" className="text-xs font-bold text-[#231917]">
+                Select Cut Item
               </label>
-              <label className="toggle-row admin-toggle">
+              <select
+                id="product-select"
+                value={selectedProduct.id}
+                onChange={e => {
+                  const p = fallbackProducts.find(item => item.id === e.target.value);
+                  if (p) setSelectedProduct(p);
+                }}
+                className="w-full text-xs font-semibold p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#A83A2F] outline-none"
+              >
+                {fallbackProducts.map(p => (
+                  <option key={p.id} value={p.id} disabled={!p.is_available}>
+                    {p.name} ({p.name_bengali}) — ₹{p.price_per_kg}/kg {!p.is_available ? '(Out of stock)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Cut Style Selection using Reflections Chip Primitive */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold text-[#231917]">Cut Style (কাটের ধরন)</span>
+              <div className="grid grid-cols-3 gap-2">
+                {cutStyleOptions.map(cut => (
+                  <Chip
+                    key={cut.value}
+                    active={selectedCut === cut.value}
+                    onClick={() => setSelectedCut(cut.value)}
+                  >
+                    {cut.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            {/* Weight Selection using Reflections Chip Primitive */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold text-[#231917]">Weight / পরিমাণ</span>
+              <div className="grid grid-cols-4 gap-2">
+                {weightOptions.map(w => (
+                  <Chip
+                    key={w.value}
+                    active={selectedWeight === w.value && !customWeight}
+                    onClick={() => {
+                      setSelectedWeight(w.value);
+                      setCustomWeight('');
+                    }}
+                  >
+                    {w.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            {/* Pickup Time Selection using Reflections Chip Primitive */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold text-[#231917]">Pickup Timing (পিকআপের সময়)</span>
+              <div className="grid grid-cols-3 gap-2">
+                {pickupOptions.map(p => (
+                  <Chip
+                    key={p.value}
+                    active={selectedPickup === p.value}
+                    onClick={() => setSelectedPickup(p.value)}
+                  >
+                    {p.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Inputs with :user-invalid and :user-valid rules */}
+            <div className="space-y-3 pt-2 border-t border-[#E6DEC8]">
+              {/* Name Field */}
+              <div className="field space-y-1">
+                <label htmlFor="customer-name" className="text-xs font-bold text-[#231917] flex justify-between">
+                  <span>Your Name (নাম)</span>
+                  <span className="text-[11px] text-[#665852] font-normal">Required</span>
+                </label>
+                <span id="name-hint" className="text-[11px] text-[#665852] block">
+                  Enter the name for counter pickup announcement
+                </span>
+                <input
+                  type="text"
+                  id="customer-name"
+                  name="name"
+                  required
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="e.g. Subrata / Anirban"
+                  autoComplete="name"
+                  aria-describedby="name-hint"
+                  data-error="name-error"
+                  className="w-full text-xs p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#A83A2F] outline-none font-medium"
+                />
+                <div id="name-error" className="error-msg items-center gap-1 text-[11px] text-red-600 mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Please enter your name for counter pickup.</span>
+                </div>
+              </div>
+
+              {/* Phone Field */}
+              <div className="field space-y-1">
+                <label htmlFor="customer-phone" className="text-xs font-bold text-[#231917] flex justify-between">
+                  <span>10-Digit Mobile (ফোন নম্বর)</span>
+                  <span className="text-[11px] text-[#665852] font-normal">Required</span>
+                </label>
+                <span id="phone-hint" className="text-[11px] text-[#665852] block">
+                  Format: 10 digits without +91 (e.g. 9635021694)
+                </span>
+                <input
+                  type="tel"
+                  id="customer-phone"
+                  name="phone"
+                  required
+                  pattern="[0-9]{10}"
+                  inputMode="tel"
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                  placeholder="9635021694"
+                  autoComplete="tel"
+                  aria-describedby="phone-hint"
+                  data-error="phone-error"
+                  className="w-full text-xs p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#A83A2F] outline-none font-mono font-medium"
+                />
+                <div id="phone-error" className="error-msg items-center gap-1 text-[11px] text-red-600 mt-1">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Please enter a valid 10-digit mobile number.</span>
+                </div>
+              </div>
+
+              {/* Invoice Request Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
                 <input
                   type="checkbox"
-                  checked={product.is_available}
-                  onChange={(event) => updateDraft(product.id, {is_available: event.target.checked})}
+                  checked={requestInvoice}
+                  onChange={e => setRequestInvoice(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#A83A2F] focus:ring-[#A83A2F]"
                 />
-                <span>
-                  <strong>{product.is_available ? 'Available' : 'Hidden'}</strong>
-                  <small>{product.is_available ? 'গ্রাহক দেখতে পাবে' : 'এখন দেখাবে না'}</small>
+                <span className="text-xs text-[#231917] font-medium">
+                  {siteData.booking.invoiceLabel} ({siteData.booking.invoiceLabelBengali})
                 </span>
               </label>
-              <button className="primary-cta compact" type="button" onClick={() => saveProduct(product)}>
-                {product.saveState === 'saving' ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-                {product.saveState === 'saved' ? 'Saved' : 'Save'}
-              </button>
-            </article>
-          ))}
-        </div>
+            </div>
 
-        <div className="pending-bookings">
-          <h2>Pending bookings</h2>
-          {bookings.length === 0 ? (
-            <p>No pending bookings right now.</p>
-          ) : (
-            bookings.map((booking) => (
-              <article key={booking.id}>
-                <strong>#{booking.order_code}</strong>
-                <span>{booking.customer_name} · {booking.phone}</span>
-                <span>{formatWeight(Number(booking.weight_kg))} {booking.product_name} · {booking.pickup_time}</span>
-              </article>
-            ))
-          )}
+            {/* Price Estimate Summary */}
+            <div className="p-3.5 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#E6DEC8] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[#665852] block font-medium">Estimated Total ({effectiveWeight}kg)</span>
+                <span className="font-extrabold font-mono text-base text-[#872B22] tabular-nums">~₹{estimatedPrice}</span>
+              </div>
+              <div className="text-right text-[11px] text-[#665852]">
+                <span className="font-medium">Pay at Counter</span>
+                <p className="text-emerald-700 font-bold">No advance payment</p>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                tone="whatsapp"
+                size="md"
+                className="w-full py-3"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Send Pre-Booking via WhatsApp</span>
+              </Button>
+            </div>
+          </form>
+        )}
+      </ModalSheet>
+
+      {/* Footer */}
+      <footer className="mt-auto bg-[#FFFFFF] border-t border-[#E6DEC8] py-8 text-xs text-[#665852]">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-display font-bold text-sm text-[#872B22]">{siteData.shopName}</span>
+            <span className="font-bengali text-xs font-semibold">{siteData.shopNameBengali}</span>
+          </div>
+
+          <p className="text-center sm:text-right">
+            Fuljhore Sabji Market, Durgapur-713206 · Udyam: {siteData.udyamRegistrationNumber}
+          </p>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
   );
 }

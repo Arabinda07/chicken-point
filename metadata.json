@@ -2,5 +2,5 @@
   "name": "Bikash Chicken Point",
   "description": "Local fresh chicken ordering page for Bikash Chicken Point at Sabji Market, Fuljhore, Durgapur-713206, West Bengal.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
