@@ -31,6 +31,7 @@
 :root {
   /* Reflections Physical Easing */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   /* Reflections Concentric Radii */
   --radius-chip: 0.75rem;     /* 12px */
@@ -132,11 +133,53 @@
 .sheet-grab-handle {
   width: 36px;
   height: 4px;
-  border-radius: 999px;
+  border-radius: 9999px;
   background-color: var(--color-border-hairline);
   margin-inline: auto;
   margin-bottom: 0.75rem;
   transition: background-color 150ms var(--ease-out-expo);
+}
+
+/* Modal & Mobile Sheet Entrances */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-sheet-up {
+  animation: sheet-up 240ms var(--ease-drawer) both;
+}
+
+@media (min-width: 640px) {
+  .animate-sheet-up {
+    animation: dialog-in 200ms var(--ease-out-expo) both;
+  }
+}
+
+/* Hide scrollbars cleanly on horizontal mobile tab rails */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Reduced Motion Compliance: suppress movement while preserving state-change color/opacity feedback */
@@ -163,7 +206,7 @@ dialog:modal {
 dialog::backdrop {
   overflow: hidden;
   overscroll-behavior: contain;
-  background-color: rgb(35 25 23 / 0.65);
+  background-color: rgba(17, 19, 20, 0.55);
   backdrop-filter: blur(6px);
 }
 
@@ -171,14 +214,14 @@ dialog::backdrop {
 input:user-invalid,
 select:user-invalid,
 textarea:user-invalid {
-  border-color: #d93025 !important;
+  border-color: var(--color-crimson) !important;
   background-color: #fef2f2 !important;
 }
 
 input:user-valid,
 select:user-valid,
 textarea:user-valid {
-  border-color: #15803d !important;
+  border-color: var(--color-whatsapp) !important;
 }
 
 .field:has(input:user-invalid) .error-msg,

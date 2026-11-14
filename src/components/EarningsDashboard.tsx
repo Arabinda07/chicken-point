@@ -40,20 +40,13 @@ import {
   supabase,
 } from '../lib/supabase';
 import { parsePhonePeCsv, ParseResult } from '../lib/phonepeCsvParser';
-import {
-  Card,
-  Badge,
-  Banner,
-  Dialog,
-  DialogHeader,
-  TextInput,
-  TabList,
-  Tab,
-  HStack,
-  useToast,
-} from '@astryxdesign/core';
+import { useToast } from '@astryxdesign/core';
 import { Button } from './ui/Button';
 import { Chip } from './ui/Chip';
+import { Surface } from './ui/Surface';
+import { Badge } from './ui/Badge';
+import { FieldInput } from './ui/Field';
+import { ModalSheet } from './ui/ModalSheet';
 
 interface EarningsDashboardProps {
   onBackToShop: () => void;
@@ -297,7 +290,7 @@ export function EarningsDashboard({
                 বিকাশ চিকেন পয়েন্ট
               </span>
               <Badge
-                variant="purple"
+                tone="ocher"
                 icon={<QrCode className="w-3.5 h-3.5" />}
                 label="PhonePe Statements"
               />
@@ -355,35 +348,78 @@ export function EarningsDashboard({
           </div>
         </div>
 
-        {/* Navigation Tabs using Meta Astryx TabList & Tab */}
-        <div className="max-w-6xl mx-auto px-4 border-t border-[#d8cab6]/70">
-          <TabList
-            value={activeTab}
-            onChange={(val) => onSwitchTab?.(val as 'dashboard' | 'rates' | 'bookings')}
-            hasDivider={false}
-            size="md"
-          >
-            <Tab
-              value="dashboard"
-              label="Recap & Best Customers (সেরা খরিদ্দার)"
-              icon={<Award className="w-3.5 h-3.5 text-[#6c2b11]" />}
-            />
+        {/* Navigation Tabs */}
+        <nav
+          aria-label="Dashboard sections"
+          className="max-w-6xl mx-auto px-4 border-t border-[#d8cab6]/70 overflow-x-auto no-scrollbar"
+        >
+          <div role="tablist" className="flex items-center gap-1 sm:gap-2 min-w-max">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'dashboard'}
+              onClick={() => onSwitchTab?.('dashboard')}
+              className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
+                activeTab === 'dashboard'
+                  ? 'text-[#6c2b11] font-bold'
+                  : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
+              }`}
+            >
+              <Award className={`w-3.5 h-3.5 ${activeTab === 'dashboard' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
+              <span>Recap & Best Customers (সেরা খরিদ্দার)</span>
+              {activeTab === 'dashboard' && (
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
+                />
+              )}
+            </button>
             {onSwitchTab && (
               <>
-                <Tab
-                  value="rates"
-                  label="Counter Rates (রেট পরিবর্তন)"
-                  icon={<Layers className="w-3.5 h-3.5 text-[#6c2b11]" />}
-                />
-                <Tab
-                  value="bookings"
-                  label="Pending Orders (বুকিং তালিকা)"
-                  icon={<Clock className="w-3.5 h-3.5 text-[#6c2b11]" />}
-                />
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'rates'}
+                  onClick={() => onSwitchTab('rates')}
+                  className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
+                    activeTab === 'rates'
+                      ? 'text-[#6c2b11] font-bold'
+                      : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
+                  }`}
+                >
+                  <Layers className={`w-3.5 h-3.5 ${activeTab === 'rates' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
+                  <span>Counter Rates (রেট পরিবর্তন)</span>
+                  {activeTab === 'rates' && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
+                    />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'bookings'}
+                  onClick={() => onSwitchTab('bookings')}
+                  className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
+                    activeTab === 'bookings'
+                      ? 'text-[#6c2b11] font-bold'
+                      : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
+                  }`}
+                >
+                  <Clock className={`w-3.5 h-3.5 ${activeTab === 'bookings' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
+                  <span>Pending Orders (বুকিং তালিকা)</span>
+                  {activeTab === 'bookings' && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
+                    />
+                  )}
+                </button>
               </>
             )}
-          </TabList>
-        </div>
+          </div>
+        </nav>
       </header>
 
       {/* Main Container */}
@@ -391,81 +427,66 @@ export function EarningsDashboard({
         {/* Executive KPI Cards Grid (Grounded static summary cards) */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total UPI Revenue */}
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
-          >
+          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-purple-800 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
                   PhonePe UPI
                 </span>
                 <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   মোট UPI বিক্রি
                 </h3>
               </div>
-              <div className="p-2 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+              <div className="p-2 rounded-full bg-[#a84222]/10 text-[#a84222] border border-[#a84222]/25">
                 <QrCode className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#6c2b11] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
                 ₹{recapMetrics.total_revenue.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
+            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
               <span>{recapMetrics.total_orders} verified payments</span>
-              <Badge variant="purple" label="Direct to Bank" />
+              <Badge tone="whatsapp" label="Direct to Bank" />
             </div>
-          </Card>
+          </Surface>
 
           {/* Card 2: Regular Customer Retention */}
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
-          >
+          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-[#6c2b11] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#6c2b11] uppercase tracking-wider block">
                   Customer Loyalty
                 </span>
                 <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   নিয়মিত খরিদ্দার হার
                 </h3>
               </div>
-              <div className="p-2 rounded-full bg-[#ebd3a2]/40 text-[#6c2b11] border border-[#e0b81f]/50">
+              <div className="p-2 rounded-full bg-[#ebd3a2]/45 text-[#6c2b11] border border-[#e0b81f]/50">
                 <Users className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#111314] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
                 {recapMetrics.repeat_customer_rate}%
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
+            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
               <span>{bestCustomers.filter((c) => c.total_visits > 1).length} repeat weekly buyers</span>
-              <Badge variant="success" label="High Repeat" />
+              <Badge tone="ocher" label="High Repeat" />
             </div>
-          </Card>
+          </Surface>
 
           {/* Card 3: Sunday Peak Rush */}
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
-          >
+          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
                   Sunday Peak Rush
                 </span>
                 <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
@@ -478,67 +499,57 @@ export function EarningsDashboard({
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#6c2b11] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
                 ₹{recapMetrics.sunday_revenue.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
+            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
               <span>{recapMetrics.sunday_orders} morning rush orders</span>
-              <Badge variant="error" label="Biggest Rush" />
+              <Badge tone="crimson" label="Biggest Rush" />
             </div>
-          </Card>
+          </Surface>
 
           {/* Card 4: Avg Order Ticket */}
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
-          >
+          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-sky-700 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#7c4226] uppercase tracking-wider block">
                   Average Ticket Size
                 </span>
                 <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   গড় কেনাকাটা
                 </h3>
               </div>
-              <div className="p-2 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+              <div className="p-2 rounded-full bg-[#f5ebd6] text-[#6c2b11] border border-[#d8cab6]">
                 <Wallet className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#111314] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
                 ₹{recapMetrics.weekly_aov}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
+            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
               <span>Per customer sale</span>
-              <Badge variant="blue" label="~1.5kg – 2kg" />
+              <Badge tone="neutral" label="~1.5kg – 2kg" className="font-mono tabular-nums" />
             </div>
-          </Card>
+          </Surface>
         </section>
 
         {/* SECTION 1: Best Customers Leaderboard (সেরা খরিদ্দার তালিকা) */}
         <section className="space-y-4">
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="bg-white border border-[#d8cab6] rounded-[var(--radius-panel)] space-y-4"
-          >
+          <Surface variant="paper" padding="md" className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider">
                     Customer Intelligence
                   </span>
                   <Badge
-                    variant="purple"
+                    tone="ocher"
                     icon={<Crown className="w-3.5 h-3.5" />}
                     label="VIP Retention"
                   />
@@ -602,38 +613,38 @@ export function EarningsDashboard({
                         <h3 className="font-display font-bold text-sm text-[#111314] truncate">
                           {cust.customer_name || 'Regular Customer'}
                         </h3>
-                        <span className="text-[11px] font-mono text-[#7c4226] truncate block">
+                        <span className="text-xs font-mono text-[#7c4226] truncate block">
                           {cust.customer_identifier}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-[var(--radius-concentric-control)] bg-white border border-[#d8cab6] text-[#6c2b11]">
+                    <span className="text-xs font-bold font-mono tabular-nums px-2 py-0.5 rounded-[var(--radius-concentric-control)] bg-white border border-[#d8cab6] text-[#6c2b11]">
                       #{index + 1}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#d8cab6]/70 text-center">
                     <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-[10px] text-[#7c4226] block">Total Spent</span>
+                      <span className="text-xs text-[#7c4226] block">Total Spent</span>
                       <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
                         ₹{cust.total_lifetime_spend.toLocaleString('en-IN')}
                       </span>
                     </div>
                     <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-[10px] text-[#7c4226] block">Visits</span>
+                      <span className="text-xs text-[#7c4226] block">Visits</span>
                       <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                         {cust.total_visits} orders
                       </span>
                     </div>
                     <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-[10px] text-[#7c4226] block">Avg Ticket</span>
+                      <span className="text-xs text-[#7c4226] block">Avg Ticket</span>
                       <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                         ₹{cust.average_order_value}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#7c4226] pt-1">
+                  <div className="flex items-center justify-between text-xs text-[#7c4226] pt-1">
                     <span className="truncate">
                       Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit}d ago`}
                     </span>
@@ -645,20 +656,15 @@ export function EarningsDashboard({
                 </button>
               ))}
             </div>
-          </Card>
+          </Surface>
         </section>
 
         {/* SECTION 2: PhonePe Statements Ledger */}
         <section className="space-y-4">
-          <Card
-            variant="default"
-            elevation="low"
-            padding={4}
-            className="bg-white border border-[#d8cab6] rounded-[var(--radius-panel)] space-y-4"
-          >
+          <Surface variant="paper" padding="md" className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider block">
+                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
                   PhonePe Verified Statements
                 </span>
                 <h2 className="font-display font-extrabold text-base sm:text-lg text-[#111314]">
@@ -667,14 +673,14 @@ export function EarningsDashboard({
               </div>
 
               <div className="w-full sm:w-72">
-                <TextInput
+                <FieldInput
                   type="search"
                   label="Search transactions"
                   isLabelHidden
                   placeholder="Search Bank UTR, Customer..."
+                  icon={<Search className="w-4 h-4" />}
                   value={searchQuery}
                   onChange={(val) => setSearchQuery(val)}
-                  width="100%"
                 />
               </div>
             </div>
@@ -701,7 +707,7 @@ export function EarningsDashboard({
                     </tr>
                   ) : (
                     filteredPayments.map((p) => (
-                      <tr key={p.provider_reference_id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                      <tr key={p.provider_reference_id} className="hover:bg-[#FAF7F2]/60 transition-[background-color] duration-150 ease-[var(--ease-out-expo)]">
                         <td className="p-3 font-mono text-[#7c4226] whitespace-nowrap">
                           {new Date(p.paid_at).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -716,20 +722,20 @@ export function EarningsDashboard({
                         <td className="p-3">
                           <strong className="text-[#111314] block">{p.payer_name || 'Walk-in Customer'}</strong>
                           {p.payer_vpa && (
-                            <span className="font-mono text-[11px] text-[#7c4226] block">
+                            <span className="font-mono text-xs text-[#7c4226] block">
                               {p.payer_vpa}
                             </span>
                           )}
                         </td>
                         <td className="p-3">
-                          <div className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
-                            <code className="font-mono font-medium text-[11px] text-[#111314]">
+                          <div className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
+                            <code className="font-mono font-medium text-xs text-[#111314] tabular-nums">
                               {p.provider_reference_id}
                             </code>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(p.provider_reference_id)}
-                              className="inline-flex items-center justify-center p-1.5 min-w-[28px] min-h-[28px] rounded-md text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active-press cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+                              className="inline-flex items-center justify-center p-1.5 min-w-[28px] min-h-[28px] rounded-[var(--radius-concentric-control)] text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
                               title="Copy Bank UTR"
                               aria-label={`Copy Bank UTR ${p.provider_reference_id}`}
                             >
@@ -739,7 +745,7 @@ export function EarningsDashboard({
                         </td>
                         <td className="p-3 text-[#7c4226]">{p.notes || 'UPI Counter Sale'}</td>
                         <td className="p-3">
-                          <Badge variant="success" label={p.status} />
+                          <Badge tone="whatsapp" label={p.status} />
                         </td>
                         <td className="p-3 text-right font-mono font-bold text-sm text-[#15803D] tabular-nums">
                           +₹{p.amount_rupees.toLocaleString('en-IN')}
@@ -750,113 +756,21 @@ export function EarningsDashboard({
                 </tbody>
               </table>
             </div>
-          </Card>
+          </Surface>
         </section>
       </main>
 
-      {/* MODAL 1: PhonePe CSV Upload Dialog with Meta Astryx Dialog */}
-      <Dialog
+      {/* MODAL 1: PhonePe CSV Upload Dialog */}
+      <ModalSheet
         isOpen={isUploadModalOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsUploadModalOpen(false);
-            setParsedCsvResult(null);
-          }
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          setParsedCsvResult(null);
         }}
-        purpose="form"
-        width={560}
-        maxHeight="85dvh"
-        padding={0}
-        className="rounded-[var(--radius-panel)] bg-white text-[#111314] border border-[#d8cab6] shadow-2xl overflow-hidden"
-      >
-        <DialogHeader
-          title="Upload PhonePe Statement CSV"
-          subtitle="Download daily/weekly statement from business.phonepe.com and drop here"
-          onOpenChange={(open) => {
-            if (!open) {
-              setIsUploadModalOpen(false);
-              setParsedCsvResult(null);
-            }
-          }}
-          className="px-5 py-4 border-b border-[#d8cab6] bg-[#FAF7F2]/80"
-        />
-
-        <div className="p-5 sm:p-6 space-y-4">
-          <p className="text-xs text-[#7c4226] leading-relaxed">
-            Download your transaction statement from the{' '}
-            <strong className="text-[#111314]">PhonePe for Business Portal</strong> or Business App, and drop the CSV file below.
-          </p>
-
-          {/* Drag & Drop Zone */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`p-6 border-2 border-dashed rounded-[var(--radius-concentric-panel)] text-center cursor-pointer transition-[border-color,background-color] duration-150 ease-[var(--ease-out-expo)] ${
-              isDragging
-                ? 'border-[#6c2b11] bg-[#6c2b11]/5'
-                : 'border-[#d8cab6] bg-[#FAF7F2] hover:bg-[#f5ebd6]'
-            }`}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".csv"
-              style={{ display: 'none' }}
-              onChange={handleFileInputChange}
-            />
-            <Upload className="w-8 h-8 mx-auto text-[#6c2b11] mb-2" />
-            <p className="text-xs font-bold text-[#111314]">
-              Click to browse or drag & drop PhonePe CSV file
-            </p>
-            <span className="text-[11px] text-[#7c4226] mt-1 block">
-              Supports standard PhonePe for Business CSV exports
-            </span>
-          </div>
-
-          {/* Parsed Preview */}
-          {parsedCsvResult && (
-            <div className="pt-2">
-              {parsedCsvResult.success ? (
-                <div className="p-4 rounded-[var(--radius-control)] bg-emerald-50 border border-emerald-200 space-y-3">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
-                        {parsedCsvResult.validCount}
-                      </span>
-                      <span className="text-[10px] text-emerald-700 block">Valid Rows</span>
-                    </div>
-                    <div>
-                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
-                        ₹{parsedCsvResult.totalAmountRupees.toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[10px] text-emerald-700 block">Total Amount</span>
-                    </div>
-                    <div>
-                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
-                        {parsedCsvResult.uniqueCustomersCount}
-                      </span>
-                      <span className="text-[10px] text-emerald-700 block">Customers</span>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-emerald-800 border-t border-emerald-200/60 pt-2">
-                    🔒 <strong>Auto-Deduplication:</strong> Transactions with existing Bank UTRs will be skipped safely without creating duplicate entries.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-3 rounded-[var(--radius-control)] bg-rose-50 border border-rose-200 text-xs text-rose-800">
-                  ⚠️ {parsedCsvResult.error || 'Failed to parse file. Please verify it is a valid PhonePe CSV.'}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="pt-3 border-t border-[#d8cab6] flex items-center justify-end gap-3">
+        title="Upload PhonePe Statement CSV"
+        subtitle="Download daily/weekly statement from business.phonepe.com and drop here"
+        footer={
+          <div className="flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="ghost"
@@ -878,54 +792,137 @@ export function EarningsDashboard({
               Confirm & Import Transactions
             </Button>
           </div>
-        </div>
-      </Dialog>
-
-      {/* MODAL 2: Customer Purchase History Dialog with Meta Astryx Dialog */}
-      <Dialog
-        isOpen={!!selectedCustomer}
-        onOpenChange={(open) => {
-          if (!open) setSelectedCustomer(null);
-        }}
-        purpose="info"
-        width={560}
-        maxHeight="85dvh"
-        padding={0}
-        className="rounded-[var(--radius-panel)] bg-white text-[#111314] border border-[#d8cab6] shadow-2xl overflow-hidden"
+        }
       >
-        <DialogHeader
-          title={selectedCustomer?.customer_name || 'Regular Customer'}
-          subtitle={selectedCustomer?.customer_identifier}
-          onOpenChange={(open) => {
-            if (!open) setSelectedCustomer(null);
-          }}
-          className="px-5 py-4 border-b border-[#d8cab6] bg-[#FAF7F2]/80"
-        />
+        <div className="space-y-4">
+          <p className="text-xs text-[#7c4226] leading-relaxed">
+            Download your transaction statement from the{' '}
+            <strong className="text-[#111314]">PhonePe for Business Portal</strong> or Business App, and drop the CSV file below.
+          </p>
 
+          {/* Drag & Drop Zone */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Browse or drag and drop PhonePe CSV file"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`p-6 border-2 border-dashed rounded-[var(--radius-concentric-panel)] text-center cursor-pointer transition-[border-color,background-color] duration-150 ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 ${
+              isDragging
+                ? 'border-[#6c2b11] bg-[#6c2b11]/5'
+                : 'border-[#d8cab6] bg-[#FAF7F2] hover:bg-[#f5ebd6]'
+            }`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".csv"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
+            <Upload className="w-8 h-8 mx-auto text-[#6c2b11] mb-2" />
+            <p className="text-xs font-bold text-[#111314]">
+              Click to browse or drag & drop PhonePe CSV file
+            </p>
+            <span className="text-xs text-[#7c4226] mt-1 block">
+              Supports standard PhonePe for Business CSV exports
+            </span>
+          </div>
+
+          {/* Parsed Preview */}
+          {parsedCsvResult && (
+            <div className="pt-2">
+              {parsedCsvResult.success ? (
+                <div className="p-4 rounded-[var(--radius-control)] bg-[#15803D]/8 border border-[#15803D]/25 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <span className="font-mono font-bold text-sm text-[#15803D] tabular-nums">
+                        {parsedCsvResult.validCount}
+                      </span>
+                      <span className="text-xs text-[#15803D] block">Valid Rows</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-sm text-[#15803D] tabular-nums">
+                        ₹{parsedCsvResult.totalAmountRupees.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-xs text-[#15803D] block">Total Amount</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-sm text-[#15803D] tabular-nums">
+                        {parsedCsvResult.uniqueCustomersCount}
+                      </span>
+                      <span className="text-xs text-[#15803D] block">Customers</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-[#15803D] border-t border-[#15803D]/20 pt-2">
+                    <strong>Auto-Deduplication:</strong> Transactions with existing Bank UTRs will be skipped safely without creating duplicate entries.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 rounded-[var(--radius-control)] bg-[#a84222]/10 border border-[#a84222]/30 text-xs text-[#6c2b11]">
+                  {parsedCsvResult.error || 'Failed to parse file. Please verify it is a valid PhonePe CSV.'}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </ModalSheet>
+
+      {/* MODAL 2: Customer Purchase History Dialog */}
+      <ModalSheet
+        isOpen={!!selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+        title={selectedCustomer?.customer_name || 'Regular Customer'}
+        subtitle={selectedCustomer?.customer_identifier}
+        footer={
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setSelectedCustomer(null)}
+            >
+              Close
+            </Button>
+          </div>
+        }
+      >
         {selectedCustomer && (
-          <div className="p-5 sm:p-6 space-y-4">
+          <div className="space-y-4">
             {/* Customer Summary Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center p-3 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#d8cab6]">
               <div>
-                <span className="text-[10px] text-[#7c4226] block">Total Spent</span>
+                <span className="text-xs text-[#7c4226] block">Total Spent</span>
                 <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
                   ₹{selectedCustomer.total_lifetime_spend.toLocaleString('en-IN')}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#7c4226] block">Visits</span>
+                <span className="text-xs text-[#7c4226] block">Visits</span>
                 <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                   {selectedCustomer.total_visits} orders
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#7c4226] block">Average Order</span>
+                <span className="text-xs text-[#7c4226] block">Average Order</span>
                 <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                   ₹{selectedCustomer.average_order_value}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#7c4226] block">Loyalty Tier</span>
+                <span className="text-xs text-[#7c4226] block">Loyalty Tier</span>
                 <span className="text-xs font-semibold text-[#6c2b11]">
                   {selectedCustomer.loyalty_tier}
                 </span>
@@ -940,13 +937,13 @@ export function EarningsDashboard({
                 {selectedCustomer.recent_payments?.map((pay) => (
                   <div
                     key={pay.provider_reference_id}
-                    className="p-2.5 rounded-[var(--radius-control)] border border-[#d8cab6]/80 bg-white flex items-center justify-between text-xs"
+                    className="p-3 rounded-[var(--radius-control)] border border-[#d8cab6]/80 bg-white flex items-center justify-between gap-2 text-xs"
                   >
                     <div>
                       <strong className="text-[#15803D] font-mono tabular-nums block">
                         +₹{pay.amount_rupees.toLocaleString('en-IN')}
                       </strong>
-                      <span className="text-[11px] text-[#7c4226]">
+                      <span className="text-xs text-[#7c4226]">
                         {new Date(pay.paid_at).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
@@ -954,32 +951,21 @@ export function EarningsDashboard({
                         })}
                       </span>
                       {pay.notes && (
-                        <span className="text-[11px] text-[#111314] block font-medium">
+                        <span className="text-xs text-[#111314] block font-medium">
                           {pay.notes}
                         </span>
                       )}
                     </div>
-                    <code className="text-[10px] font-mono text-[#7c4226] bg-[#FAF7F2] px-2 py-1 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
+                    <code className="text-xs font-mono text-[#7c4226] bg-[#FAF7F2] px-2 py-1 rounded-[var(--radius-concentric-control)] border border-[#d8cab6] tabular-nums flex-shrink-0">
                       UTR: {pay.provider_reference_id.slice(-6)}
                     </code>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="pt-3 border-t border-[#d8cab6] flex justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedCustomer(null)}
-              >
-                Close
-              </Button>
-            </div>
           </div>
         )}
-      </Dialog>
+      </ModalSheet>
     </div>
   );
 }

@@ -30,15 +30,10 @@ import { Button } from './components/ui/Button';
 import { Chip } from './components/ui/Chip';
 import { Surface } from './components/ui/Surface';
 import { ModalSheet } from './components/ui/ModalSheet';
+import { Badge } from './components/ui/Badge';
+import { FieldInput } from './components/ui/Field';
 import {
-  Card,
-  Badge,
-  Banner,
   StatusDot,
-  TabList,
-  Tab,
-  HStack,
-  TextInput,
   CheckboxInput,
   useToast,
 } from '@astryxdesign/core';
@@ -191,33 +186,34 @@ Please confirm availability and keep it packed for pickup!`;
                 fetchPriority="high"
               />
               <span
+                aria-hidden="true"
                 className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
                   isShopOpen ? 'bg-[#15803D]' : 'bg-[#e0b81f]'
                 }`}
                 title={isShopOpen ? 'Open now' : 'Pre-orders only'}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-extrabold text-lg tracking-tight text-[#6c2b11]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-display font-extrabold text-base sm:text-lg tracking-tight text-[#6c2b11] whitespace-nowrap">
                   {siteData.shopName}
                 </span>
-                <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#a84222]/10 text-[#a84222]">
+                <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#a84222]/10 text-[#a84222] whitespace-nowrap">
                   {siteData.shopNameBengali}
                 </span>
               </div>
               <p className="text-xs text-[#7c4226] flex items-center gap-1.5 mt-0.5">
-                <MapPin className="w-3.5 h-3.5 text-[#a84222]" />
-                <span>Sabji Market, Fuljhore, Durgapur-713206</span>
+                <MapPin className="w-3.5 h-3.5 text-[#a84222] flex-shrink-0" />
+                <span className="truncate">Sabji Market, Fuljhore, Durgapur-713206</span>
               </p>
             </div>
           </div>
 
           {/* Header Action Buttons & Status */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div className="hidden sm:inline-flex items-center">
               <Badge
-                variant={isShopOpen ? 'success' : 'neutral'}
+                tone={isShopOpen ? 'whatsapp' : 'ocher'}
                 icon={
                   <StatusDot
                     variant={isShopOpen ? 'success' : 'warning'}
@@ -231,7 +227,7 @@ Please confirm availability and keep it packed for pickup!`;
 
             <a
               href={`tel:${siteData.phone}`}
-              className="inline-flex items-center gap-1.5 px-3 min-h-[36px] text-xs font-semibold rounded-[var(--radius-chip)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-[#111314] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+              className="inline-flex items-center gap-1.5 px-3 min-h-[38px] text-xs font-semibold rounded-[var(--radius-chip)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-[#111314] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
               aria-label="Call shop owner"
             >
               <Phone className="w-3.5 h-3.5 text-[#a84222]" />
@@ -241,8 +237,9 @@ Please confirm availability and keep it packed for pickup!`;
             <button
               type="button"
               onClick={() => setActiveTab('admin')}
-              className="inline-flex items-center gap-1 px-2.5 min-h-[36px] text-xs font-medium rounded-[var(--radius-chip)] text-[#7c4226] hover:text-[#111314] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active-press cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/35"
+              className="inline-flex items-center gap-1 px-2.5 min-h-[38px] text-xs font-medium rounded-[var(--radius-chip)] text-[#7c4226] hover:text-[#111314] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/35"
               title="Owner Admin Dashboard"
+              aria-label="Owner Admin Dashboard"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">Admin</span>
@@ -250,44 +247,58 @@ Please confirm availability and keep it packed for pickup!`;
           </div>
         </div>
 
-        {/* Navigation Tabs using Meta Astryx TabList & Tab */}
-        <div className="max-w-5xl mx-auto px-4 border-t border-[#d8cab6]/70">
-          <TabList
-            value={activeTab}
-            onChange={(val) => setActiveTab(val as 'shop' | 'qr' | 'bulk')}
-            hasDivider={false}
-            size="md"
-          >
-            <Tab
-              value="shop"
-              label="Menu & Pre-Book"
-              icon={<Utensils className="w-3.5 h-3.5 text-[#6c2b11]" />}
-            />
-            <Tab
-              value="qr"
-              label="Counter QR & Location"
-              icon={<QrCode className="w-3.5 h-3.5 text-[#6c2b11]" />}
-            />
-            <Tab
-              value="bulk"
-              label="Bulk & B2B Orders"
-              icon={<FileText className="w-3.5 h-3.5 text-[#6c2b11]" />}
-            />
-          </TabList>
-        </div>
+        {/* Navigation Tabs */}
+        <nav
+          aria-label="Storefront sections"
+          className="max-w-5xl mx-auto px-4 border-t border-[#d8cab6]/70 overflow-x-auto no-scrollbar"
+        >
+          <div role="tablist" className="flex items-center gap-1 sm:gap-2 min-w-max">
+            {[
+              { id: 'shop' as const, label: 'Menu & Pre-Book', icon: Utensils },
+              { id: 'qr' as const, label: 'Counter QR & Location', icon: QrCode },
+              { id: 'bulk' as const, label: 'Bulk & B2B Orders', icon: FileText },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
+                    isActive
+                      ? 'text-[#6c2b11] font-bold'
+                      : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
+                  <span>{tab.label}</span>
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </header>
 
       {/* Main Content Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 pt-6 pb-20 md:pb-8">
         {activeTab === 'shop' && (
           <div className="space-y-8">
             {/* Hero Section: Wada Sanzo Deep Brown -> Brick Red */}
             <section className="relative overflow-hidden rounded-[var(--radius-panel)] bg-gradient-to-br from-[#6c2b11] via-[#8b361a] to-[#a84222] text-white p-6 sm:p-8 shadow-md">
               <div className="relative z-10 max-w-2xl space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[var(--radius-chip)] bg-white/15 text-white/95 text-xs font-semibold backdrop-blur-sm border border-white/10">
-                  <Sparkles className="w-3.5 h-3.5 text-[#e0b81f]" />
-                  <span>{siteData.hero.eyebrow}</span>
-                  <span className="opacity-75">· Fuljhore Sabji Market</span>
+                <div className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 px-3 py-1 rounded-[var(--radius-chip)] bg-white/15 text-white/95 text-xs font-semibold backdrop-blur-sm border border-white/10">
+                  <Sparkles className="w-3.5 h-3.5 text-[#e0b81f] flex-shrink-0" />
+                  <span className="font-bengali">{siteData.hero.eyebrow}</span>
+                  <span className="opacity-80">· Fuljhore Sabji Market</span>
                 </div>
 
                 <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white">
@@ -314,7 +325,7 @@ Please confirm availability and keep it packed for pickup!`;
                     href={`https://wa.me/${siteData.whatsapp}?text=Hello%20Bikash%20Da,%20what%20is%20today's%20chicken%20rate%20at%20Fuljhore%20shop?`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-[transform,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] active-press shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-[transform,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] active:scale-97 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Ask Rate on WhatsApp
@@ -328,37 +339,50 @@ Please confirm availability and keep it packed for pickup!`;
                 </div>
               </div>
 
-              {/* Watermark shop logo in background */}
+              {/* Soft circular logo watermark without rectangular edge */}
               <div
-                className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 pointer-events-none bg-contain bg-no-repeat bg-right-bottom"
-                style={{ backgroundImage: `url(${logoUrl})` }}
+                className="hidden sm:block absolute right-6 top-1/2 -translate-y-1/2 w-52 h-52 rounded-full opacity-12 pointer-events-none bg-cover bg-center mix-blend-luminosity"
+                style={{
+                  backgroundImage: `url(${logoUrl})`,
+                  maskImage: 'radial-gradient(circle, black 45%, transparent 72%)',
+                  WebkitMaskImage: 'radial-gradient(circle, black 45%, transparent 72%)',
+                }}
                 aria-hidden="true"
               />
             </section>
 
-            {/* Daily Counter Rate Transparency Notice with Meta Astryx Banner */}
-            <Banner
-              status="info"
-              title="Live Counter Rate Transparency Notice / প্রতিদিনের দর বিজ্ঞপ্তি:"
-              description="Prices update daily based on local market rates. To guarantee accuracy, please confirm the final weight and amount at the shop counter upon walk-in pickup before making your UPI/cash payment."
-              collapsible={false}
-              elevation="none"
-              className="border border-[#d8cab6] rounded-[var(--radius-panel)]"
-            />
+            {/* Daily Counter Rate Transparency Notice (Wada Warmth) */}
+            <Surface
+              variant="flat"
+              padding="md"
+              className="!bg-[#f5ebd6]/75 !border-[#e0b81f]/60 flex items-start gap-3"
+            >
+              <div className="p-2 rounded-[var(--radius-concentric-control)] bg-[#ebd3a2]/70 text-[#6c2b11] flex-shrink-0 mt-0.5">
+                <Info className="w-4 h-4" />
+              </div>
+              <div className="space-y-1 text-xs leading-relaxed">
+                <h2 className="font-display font-bold text-sm text-[#6c2b11]">
+                  Live Counter Rate Transparency Notice / <span className="font-bengali">প্রতিদিনের দর বিজ্ঞপ্তি</span>
+                </h2>
+                <p className="text-[#7c4226]">
+                  Prices update daily based on local market rates. To guarantee accuracy, please confirm the final weight and amount at the shop counter upon walk-in pickup before making your UPI/cash payment.
+                </p>
+              </div>
+            </Surface>
 
-            {/* Product Cards using Meta Astryx Card & Badge */}
+            {/* Product Cards using Surface & Badge */}
             <section className="space-y-4">
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-2">
                 <div>
                   <h2 className="font-display text-xl sm:text-2xl font-extrabold text-[#111314]">
                     Today's Fresh Cuts & Counter Menu
                   </h2>
-                  <p className="text-xs text-[#7c4226]">
+                  <p className="text-xs text-[#7c4226] mt-0.5">
                     Select any cut to customize weight and reserve for counter pickup
                   </p>
                 </div>
                 <Badge
-                  variant="neutral"
+                  tone="neutral"
                   label={`${fallbackProducts.filter(p => p.is_available).length} cuts ready`}
                 />
               </div>
@@ -368,16 +392,15 @@ Please confirm availability and keep it packed for pickup!`;
                 {fallbackProducts.map(product => {
                   const details = siteData.menuDetails[product.id as keyof typeof siteData.menuDetails];
                   return (
-                    <Card
+                    <Surface
                       key={product.id}
-                      variant="default"
-                      elevation="low"
-                      padding={4}
-                      className="product-card flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
+                      variant="paper"
+                      padding="md"
+                      className="product-card flex flex-col justify-between"
                     >
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="font-display font-bold text-base text-[#111314]">
                               {product.name}
                             </h3>
@@ -386,7 +409,7 @@ Please confirm availability and keep it packed for pickup!`;
                             </p>
                           </div>
                           <Badge
-                            variant={product.is_available ? 'success' : 'neutral'}
+                            tone={product.is_available ? 'ocher' : 'neutral'}
                             label={product.is_available ? 'Available' : 'Check Counter'}
                           />
                         </div>
@@ -398,9 +421,9 @@ Please confirm availability and keep it packed for pickup!`;
                         )}
                       </div>
 
-                      <div className="pt-4 mt-3 border-t border-[#d8cab6]/70 flex items-center justify-between">
+                      <div className="pt-3.5 mt-3.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2">
                         <div>
-                          <span className="text-[11px] text-[#7c4226] block font-medium">Counter Rate</span>
+                          <span className="text-xs text-[#7c4226] block font-medium">Counter Rate</span>
                           <span className="text-lg font-extrabold font-mono text-[#6c2b11] tabular-nums">
                             ₹{product.price_per_kg}
                             <span className="text-xs font-normal text-[#7c4226]">/kg</span>
@@ -417,21 +440,21 @@ Please confirm availability and keep it packed for pickup!`;
                           <ChevronRight className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                    </Card>
+                    </Surface>
                   );
                 })}
               </div>
             </section>
 
-            {/* How Walk-in Pickup Works with Meta Astryx Card */}
-            <Card variant="default" elevation="low" padding={4} className="space-y-4 bg-white/90 border border-[#d8cab6] rounded-[var(--radius-panel)]">
+            {/* How Walk-in Pickup Works */}
+            <Surface variant="paper" padding="md" className="space-y-4">
               <h2 className="font-display text-lg sm:text-xl font-bold text-[#111314]">
                 How Pre-Booked Walk-in Pickup Works
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {siteData.orderSteps.map((step, idx) => (
                   <div key={idx} className="p-4 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] border border-[#d8cab6]/80 space-y-2">
-                    <span className="w-7 h-7 rounded-full bg-[#6c2b11] text-white text-xs font-bold flex items-center justify-center">
+                    <span className="w-7 h-7 rounded-full bg-[#6c2b11] text-white text-xs font-bold font-mono tabular-nums flex items-center justify-center">
                       0{idx + 1}
                     </span>
                     <h3 className="font-display font-semibold text-sm text-[#111314]">
@@ -443,14 +466,11 @@ Please confirm availability and keep it packed for pickup!`;
                   </div>
                 ))}
               </div>
-            </Card>
+            </Surface>
 
-            {/* FAQs in English & Bengali with Meta Astryx Card & Badge */}
+            {/* FAQs in English & Bengali */}
             <section className="space-y-4">
               <div>
-                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider">
-                  {siteData.faqSection.eyebrow}
-                </span>
                 <h2 className="font-display text-xl sm:text-2xl font-extrabold text-[#111314]">
                   {siteData.faqSection.title}
                 </h2>
@@ -458,21 +478,21 @@ Please confirm availability and keep it packed for pickup!`;
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {siteData.faqs.map(faq => (
-                  <Card key={faq.id} variant="default" elevation="low" padding={4} className="space-y-2 bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]">
-                    <Badge variant="neutral" label={faq.tag} />
-                    <h3 className="font-bold text-sm text-[#111314]">
+                  <Surface key={faq.id} variant="paper" padding="md" className="space-y-2">
+                    <Badge tone="neutral" label={faq.tag} />
+                    <h3 className="font-display font-bold text-sm text-[#111314]">
                       {faq.question}
                     </h3>
                     <p className="font-bengali text-xs font-semibold text-[#6c2b11]">
                       {faq.questionBengali}
                     </p>
-                    <p className="text-xs text-[#7c4226] pt-1 border-t border-[#d8cab6]/60 leading-relaxed">
+                    <p className="text-xs text-[#7c4226] pt-2 border-t border-[#d8cab6]/60 leading-relaxed">
                       {faq.answer}
                     </p>
                     <p className="font-bengali text-xs text-[#7c4226]">
                       {faq.answerBengali}
                     </p>
-                  </Card>
+                  </Surface>
                 ))}
               </div>
             </section>
@@ -486,14 +506,14 @@ Please confirm availability and keep it packed for pickup!`;
               <h1 className="font-display text-2xl font-bold text-[#111314]">
                 Shop Counter QR & Directions
               </h1>
-              <p className="text-xs text-[#7c4226]">
+              <p className="text-xs text-[#7c4226] mt-0.5">
                 Sabji Market, Fuljhore, Durgapur-713206, West Bengal
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* PhonePe UPI Standee QR with Meta Astryx Card */}
-              <Card variant="default" elevation="low" padding={4} className="text-center space-y-4 bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]">
+              {/* PhonePe UPI Standee QR */}
+              <Surface variant="paper" padding="lg" className="text-center space-y-4">
                 <div className="inline-flex p-2.5 rounded-full bg-[#15803D]/10 text-[#15803D]">
                   <QrCode className="w-8 h-8" />
                 </div>
@@ -515,33 +535,35 @@ Please confirm availability and keep it packed for pickup!`;
                   />
                 </div>
                 <div className="text-xs text-[#7c4226] space-y-3">
-                  <div className="flex items-center justify-between gap-2 p-2.5 bg-[#FAF7F2] rounded-[var(--radius-control)] border border-[#d8cab6]">
-                    <div className="text-left">
-                      <span className="text-[10px] text-[#7c4226] block uppercase tracking-wider font-semibold">PhonePe UPI ID</span>
+                  <div className="flex items-center justify-between gap-2 p-3 bg-[#FAF7F2] rounded-[var(--radius-control)] border border-[#d8cab6]">
+                    <div className="text-left min-w-0">
+                      <span className="text-xs text-[#7c4226] block font-semibold">PhonePe UPI ID</span>
                       <code className="font-mono font-bold text-xs text-[#111314] select-all">{siteData.upiId}</code>
                     </div>
                     <button
                       type="button"
                       onClick={copyUpiId}
-                      className="inline-flex items-center gap-1 px-2.5 min-h-[34px] text-xs font-semibold rounded-[var(--radius-chip)] bg-[#6c2b11] text-white hover:bg-[#a84222] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active-press cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+                      className="inline-flex items-center gap-1.5 px-3 min-h-[38px] text-xs font-semibold rounded-[var(--radius-chip)] bg-[#6c2b11] text-white hover:bg-[#a84222] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
                       title="Copy UPI ID"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
                     </button>
                   </div>
-                  <Banner
-                    status="warning"
-                    title="Counter Weight Confirmation"
-                    description="Pay only after the final weight is confirmed on the shop weighing scale."
-                    collapsible={false}
-                    className="text-left text-xs"
-                  />
+                  <div className="flex items-start gap-2.5 p-3 rounded-[var(--radius-concentric-panel)] bg-[#f5ebd6]/80 border border-[#e0b81f]/60 text-left">
+                    <AlertCircle className="w-4 h-4 text-[#6c2b11] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-[#6c2b11] block">Counter Weight Confirmation</span>
+                      <span className="text-xs text-[#7c4226]">
+                        Pay only after the final weight is confirmed on the shop weighing scale.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </Card>
+              </Surface>
 
-              {/* Google Business Profile & Reviews with Meta Astryx Card */}
-              <Card variant="default" elevation="low" padding={4} className="text-center space-y-4 flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]">
+              {/* Google Business Profile & Reviews */}
+              <Surface variant="paper" padding="lg" className="text-center space-y-4 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="inline-flex p-2.5 rounded-full bg-[#a84222]/10 text-[#a84222]">
                     <MapPin className="w-8 h-8" />
@@ -570,26 +592,26 @@ Please confirm availability and keep it packed for pickup!`;
                     href={siteData.googleProfileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 min-h-[40px] rounded-[var(--radius-control)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-xs font-semibold text-[#111314] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+                    className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-[var(--radius-control)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-xs font-semibold text-[#111314] transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
                   >
                     <span>Open on Google Maps</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
-              </Card>
+              </Surface>
             </div>
 
             {/* Shop Details & Udyam Registration */}
-            <div className="bg-white border border-[#d8cab6] rounded-[var(--radius-control)] p-4 text-xs text-[#7c4226] flex flex-wrap items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-[#111314]">MSME Registration:</span>{' '}
-                <Badge variant="neutral" label={siteData.udyamRegistrationNumber} />
+            <Surface variant="flat" padding="md" className="text-xs text-[#7c4226] flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-[#111314]">MSME Registration:</span>
+                <Badge tone="neutral" label={siteData.udyamRegistrationNumber} className="font-mono tabular-nums" />
               </div>
               <div>
                 <span className="font-semibold text-[#111314]">Counter Timing:</span>{' '}
                 <span>{siteData.timing}</span>
               </div>
-            </div>
+            </Surface>
           </div>
         )}
 
@@ -597,9 +619,6 @@ Please confirm availability and keep it packed for pickup!`;
         {activeTab === 'bulk' && (
           <div className="max-w-2xl mx-auto space-y-6">
             <div>
-              <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider">
-                {siteData.b2b.eyebrow}
-              </span>
               <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#111314]">
                 {siteData.b2b.title}
               </h1>
@@ -611,24 +630,24 @@ Please confirm availability and keep it packed for pickup!`;
               </p>
             </div>
 
-            <Card variant="default" elevation="low" padding={4} className="space-y-4 bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]">
-              <div className="flex items-center justify-between">
+            <Surface variant="paper" padding="lg" className="space-y-4">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <h2 className="font-display text-base font-bold text-[#111314]">
                   Wholesale & Commercial Invoicing Benefits
                 </h2>
-                <Badge variant="purple" label="B2B Wholesale" />
+                <Badge tone="ocher" label="B2B Wholesale" />
               </div>
               <ul className="text-xs text-[#7c4226] space-y-2.5">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D] flex-shrink-0" />
                   <span>Fresh daily dressing cut to your specific culinary requirements</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D] flex-shrink-0" />
                   <span>GST-compliant business invoice generated for tax accounting</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#15803D] flex-shrink-0" />
                   <span>Dedicated counter pickup line so your kitchen prep isn't delayed</span>
                 </li>
               </ul>
@@ -638,13 +657,13 @@ Please confirm availability and keep it packed for pickup!`;
                   href={`https://wa.me/${siteData.whatsapp}?text=Hello%20Bikash%20Da,%20I%20am%20inquiring%20about%20a%20bulk/commercial%20chicken%20order%20with%20GST%20invoice.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 min-h-[44px] py-3 rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-[transform,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] active-press shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15803D]/40"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 min-h-[44px] py-3 rounded-[var(--radius-control)] bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-sm transition-[transform,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] active:scale-97 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15803D]/40"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Connect for Bulk Rates on WhatsApp
                 </a>
               </div>
-            </Card>
+            </Surface>
           </div>
         )}
       </main>
@@ -657,7 +676,7 @@ Please confirm availability and keep it packed for pickup!`;
         <div className="flex items-center gap-3">
           <a
             href={`tel:${siteData.phone}`}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-[44px] py-2.5 px-3 rounded-[var(--radius-control)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-[#111314] font-semibold text-xs transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-[44px] py-2.5 px-3 rounded-[var(--radius-control)] bg-[#f5ebd6] hover:bg-[#ebd3a2] text-[#111314] font-semibold text-xs transition-[transform,background-color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
           >
             <Phone className="w-3.5 h-3.5 text-[#a84222]" />
             <span>Call Shop</span>
@@ -681,7 +700,7 @@ Please confirm availability and keep it packed for pickup!`;
         isOpen={isSheetOpen}
         onClose={closePreBook}
         title={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span>{siteData.booking.title}</span>
             <span className="font-bengali text-xs font-semibold text-[#6c2b11]">
               {siteData.booking.titleBengali}
@@ -689,10 +708,38 @@ Please confirm availability and keep it packed for pickup!`;
           </div>
         }
         subtitle="Ready in 2 mins at Fuljhore counter · Pay upon weight confirmation"
+        footer={
+          !orderConfirmed ? (
+            <div className="space-y-3">
+              <div className="p-3 bg-white border border-[#d8cab6] rounded-[var(--radius-control)] flex items-center justify-between gap-2 text-xs">
+                <div>
+                  <span className="text-[#7c4226] block font-medium">Estimated Total ({effectiveWeight}kg)</span>
+                  <span className="font-extrabold font-mono text-base text-[#6c2b11] tabular-nums">~₹{estimatedPrice}</span>
+                </div>
+                <div className="text-right space-y-1">
+                  <Badge tone="whatsapp" label="No advance payment" />
+                  <p className="text-xs text-[#7c4226]">Pay at counter scale</p>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                form="prebook-form"
+                variant="primary"
+                tone="whatsapp"
+                size="md"
+                className="w-full"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Send Pre-Booking via WhatsApp</span>
+              </Button>
+            </div>
+          ) : undefined
+        }
       >
         {orderConfirmed ? (
           <div className="text-center py-6 space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-[#15803D]/12 text-[#15803D] flex items-center justify-center">
               <CheckCircle2 className="w-7 h-7" />
             </div>
             <div>
@@ -715,10 +762,10 @@ Please confirm availability and keep it packed for pickup!`;
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmitOrder} className="space-y-4">
+          <form id="prebook-form" onSubmit={handleSubmitOrder} className="space-y-4">
             {/* Product Selection */}
             <div className="space-y-1.5">
-              <label htmlFor="product-select" className="text-xs font-bold text-[#111314]">
+              <label htmlFor="product-select" className="block text-xs font-bold text-[#111314]">
                 Select Cut Item
               </label>
               <select
@@ -728,7 +775,7 @@ Please confirm availability and keep it packed for pickup!`;
                   const p = fallbackProducts.find(item => item.id === e.target.value);
                   if (p) setSelectedProduct(p);
                 }}
-                className="w-full text-base sm:text-xs font-semibold p-2.5 rounded-[var(--radius-control)] border border-[#d8cab6] bg-[#FAF7F2] focus:ring-2 focus:ring-[#a84222] outline-none"
+                className="w-full min-h-[44px] text-base sm:text-sm font-semibold px-3 py-2.5 rounded-[var(--radius-control)] border border-[#d8cab6] bg-[#FAF7F2] focus:bg-white focus:border-[#a84222] focus:ring-2 focus:ring-[#a84222]/25 outline-none transition-[border-color,background-color] duration-150 ease-[var(--ease-out-expo)]"
               >
                 {fallbackProducts.map(p => (
                   <option key={p.id} value={p.id} disabled={!p.is_available}>
@@ -738,15 +785,16 @@ Please confirm availability and keep it packed for pickup!`;
               </select>
             </div>
 
-            {/* Cut Style Selection using Reflections Chip Primitive */}
+            {/* Cut Style Selection using Chip Primitive */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-[#111314]">Cut Style (কাটের ধরন)</span>
-              <div className="grid grid-cols-3 gap-2">
+              <span className="block text-xs font-bold text-[#111314]">Cut Style (কাটের ধরন)</span>
+              <div className="flex flex-wrap gap-2">
                 {cutStyleOptions.map(cut => (
                   <Chip
                     key={cut.value}
                     active={selectedCut === cut.value}
                     onClick={() => setSelectedCut(cut.value)}
+                    className="flex-1 min-w-[110px]"
                   >
                     {cut.label}
                   </Chip>
@@ -754,9 +802,9 @@ Please confirm availability and keep it packed for pickup!`;
               </div>
             </div>
 
-            {/* Weight Selection using Reflections Chip Primitive */}
+            {/* Weight Selection using Chip Primitive */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-[#111314]">Weight / পরিমাণ</span>
+              <span className="block text-xs font-bold text-[#111314]">Weight / পরিমাণ</span>
               <div className="grid grid-cols-4 gap-2">
                 {weightOptions.map(w => (
                   <Chip
@@ -773,9 +821,9 @@ Please confirm availability and keep it packed for pickup!`;
               </div>
             </div>
 
-            {/* Pickup Time Selection using Reflections Chip Primitive */}
+            {/* Pickup Time Selection using Chip Primitive */}
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-[#111314]">Pickup Timing (পিকআপের সময়)</span>
+              <span className="block text-xs font-bold text-[#111314]">Pickup Timing (পিকআপের সময়)</span>
               <div className="grid grid-cols-3 gap-2">
                 {pickupOptions.map(p => (
                   <Chip
@@ -789,9 +837,9 @@ Please confirm availability and keep it packed for pickup!`;
               </div>
             </div>
 
-            {/* Customer Inputs with Astryx TextInput & CheckboxInput */}
+            {/* Customer Inputs */}
             <div className="space-y-3 pt-2 border-t border-[#d8cab6]">
-              <TextInput
+              <FieldInput
                 label="Your Name (নাম)"
                 description="Enter the name for counter pickup announcement"
                 isRequired
@@ -799,10 +847,9 @@ Please confirm availability and keep it packed for pickup!`;
                 onChange={(val) => setCustomerName(val)}
                 placeholder="e.g. Subrata / Anirban"
                 autoComplete="name"
-                width="100%"
               />
 
-              <TextInput
+              <FieldInput
                 type="tel"
                 label="10-Digit Mobile (ফোন নম্বর)"
                 description="Format: 10 digits without +91 (e.g. 9635021694)"
@@ -814,7 +861,6 @@ Please confirm availability and keep it packed for pickup!`;
                 }}
                 placeholder="9635021694"
                 autoComplete="tel"
-                width="100%"
               />
 
               <div className="pt-1">
@@ -825,32 +871,6 @@ Please confirm availability and keep it packed for pickup!`;
                   onChange={(checked) => setRequestInvoice(checked)}
                 />
               </div>
-            </div>
-
-            {/* Price Estimate Summary with Meta Astryx Card */}
-            <Card variant="default" elevation="none" padding={3} className="bg-[#FAF7F2] border border-[#d8cab6] rounded-[var(--radius-control)] flex items-center justify-between text-xs">
-              <div>
-                <span className="text-[#7c4226] block font-medium">Estimated Total ({effectiveWeight}kg)</span>
-                <span className="font-extrabold font-mono text-base text-[#6c2b11] tabular-nums">~₹{estimatedPrice}</span>
-              </div>
-              <div className="text-right text-[11px] text-[#7c4226] space-y-0.5">
-                <Badge variant="success" label="No advance payment" />
-                <p className="text-[10px] text-[#7c4226]">Pay at counter scale</p>
-              </div>
-            </Card>
-
-            {/* Submit Button */}
-            <div className="pt-2">
-              <Button
-                type="submit"
-                variant="primary"
-                tone="whatsapp"
-                size="md"
-                className="w-full py-3"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Send Pre-Booking via WhatsApp</span>
-              </Button>
             </div>
           </form>
         )}
