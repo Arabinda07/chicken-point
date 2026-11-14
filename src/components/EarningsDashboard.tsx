@@ -1,49 +1,30 @@
 import { useState, useMemo, useRef, ChangeEvent, DragEvent } from 'react';
 import {
-  Award,
-  Calendar,
-  CheckCircle2,
   ChevronRight,
-  Clock,
   Copy,
   Crown,
-  Download,
-  FileSpreadsheet,
   Flame,
-  HelpCircle,
-  Layers,
-  Phone,
   QrCode,
-  RefreshCw,
   Search,
   Share2,
-  Sparkles,
   Star,
-  TrendingUp,
   Upload,
   UserCheck,
   Users,
   Wallet,
-  X,
   ArrowLeft,
   LogOut,
-  ExternalLink,
 } from 'lucide-react';
 import {
   BestCustomer,
   PhonePeUpiPayment,
-  Settlement,
   WeeklyRecapMetrics,
-  fallbackSettlements,
   fallbackShopPayments,
-  isSupabaseConfigured,
-  supabase,
 } from '../lib/supabase';
 import { parsePhonePeCsv, ParseResult } from '../lib/phonepeCsvParser';
-import { useToast } from '@astryxdesign/core';
+import { Card, Divider, Tab, TabList, useToast } from '@astryxdesign/core';
 import { Button } from './ui/Button';
 import { Chip } from './ui/Chip';
-import { Surface } from './ui/Surface';
 import { Badge } from './ui/Badge';
 import { FieldInput } from './ui/Field';
 import { ModalSheet } from './ui/ModalSheet';
@@ -63,7 +44,6 @@ export function EarningsDashboard({
 }: EarningsDashboardProps) {
   const toast = useToast();
   const [payments, setPayments] = useState<PhonePeUpiPayment[]>(fallbackShopPayments);
-  const [settlements] = useState<Settlement[]>(fallbackSettlements);
   const [searchQuery, setSearchQuery] = useState('');
   const [customerFilter, setCustomerFilter] = useState<'ALL' | 'VIP' | 'FREQUENT' | 'HIGH_SPEND'>('ALL');
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
@@ -277,26 +257,26 @@ export function EarningsDashboard({
   }
 
   return (
-    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#111314]">
+    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#111314] overflow-x-hidden">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#d8cab6] transition-shadow">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
+      <header className="sticky top-0 z-30 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#d8cab6]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display font-extrabold text-lg sm:text-xl text-[#6c2b11]">
+              <h1 className="font-display font-bold text-lg sm:text-xl text-[#6c2b11] tracking-tight">
                 Bikash Chicken Point
               </h1>
-              <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#a84222]/10 text-[#a84222]">
+              <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#f5ebd6] border border-[#d8cab6] text-[#6c2b11]">
                 বিকাশ চিকেন পয়েন্ট
               </span>
               <Badge
                 tone="ocher"
                 icon={<QrCode className="w-3.5 h-3.5" />}
-                label="PhonePe Statements"
+                label="PhonePe Ledger"
               />
             </div>
-            <p className="text-xs text-[#7c4226] mt-0.5">
-              Executive Recap & Customer Intelligence Hub · Fuljhore Sabji Market, Durgapur
+            <p className="text-xs text-[#7c4226] mt-1">
+              Counter Recap & Customer Ledger · Fuljhore Sabji Market, Durgapur
             </p>
           </div>
 
@@ -319,7 +299,7 @@ export function EarningsDashboard({
               tone="whatsapp"
               size="sm"
               onClick={shareWhatsAppRecap}
-              title="Send formatted weekly summary to Uncle via WhatsApp"
+              title="Send formatted weekly summary via WhatsApp"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>WhatsApp Recap</span>
@@ -332,7 +312,7 @@ export function EarningsDashboard({
               onClick={onBackToShop}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Shop</span>
+              <span>Shop</span>
             </Button>
 
             <Button
@@ -351,412 +331,417 @@ export function EarningsDashboard({
         {/* Navigation Tabs */}
         <nav
           aria-label="Dashboard sections"
-          className="max-w-6xl mx-auto px-4 border-t border-[#d8cab6]/70 overflow-x-auto no-scrollbar"
+          className="max-w-6xl mx-auto px-4 sm:px-6 border-t border-[#d8cab6]/80"
         >
-          <div role="tablist" className="flex items-center gap-1 sm:gap-2 min-w-max">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'dashboard'}
-              onClick={() => onSwitchTab?.('dashboard')}
-              className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
-                activeTab === 'dashboard'
-                  ? 'text-[#6c2b11] font-bold'
-                  : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
-              }`}
-            >
-              <Award className={`w-3.5 h-3.5 ${activeTab === 'dashboard' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
-              <span>Recap & Best Customers (সেরা খরিদ্দার)</span>
-              {activeTab === 'dashboard' && (
-                <span
-                  aria-hidden="true"
-                  className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
-                />
-              )}
-            </button>
+          <TabList
+            aria-label="Admin views"
+            overflow="scroll"
+            value={activeTab}
+            onChange={(val) => {
+              if (val === 'dashboard' || val === 'rates' || val === 'bookings') {
+                onSwitchTab?.(val);
+              }
+            }}
+          >
+            <Tab value="dashboard" label="Recap & Best Customers" />
             {onSwitchTab && (
               <>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === 'rates'}
-                  onClick={() => onSwitchTab('rates')}
-                  className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
-                    activeTab === 'rates'
-                      ? 'text-[#6c2b11] font-bold'
-                      : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
-                  }`}
-                >
-                  <Layers className={`w-3.5 h-3.5 ${activeTab === 'rates' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
-                  <span>Counter Rates (রেট পরিবর্তন)</span>
-                  {activeTab === 'rates' && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
-                    />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === 'bookings'}
-                  onClick={() => onSwitchTab('bookings')}
-                  className={`relative inline-flex items-center gap-2 px-3 py-2.5 min-h-[44px] text-xs sm:text-sm whitespace-nowrap transition-[color,background-color] duration-150 ease-[var(--ease-out-expo)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 rounded-t-[var(--radius-chip)] ${
-                    activeTab === 'bookings'
-                      ? 'text-[#6c2b11] font-bold'
-                      : 'text-[#7c4226] font-medium hover:text-[#111314] hover:bg-[#f5ebd6]/40'
-                  }`}
-                >
-                  <Clock className={`w-3.5 h-3.5 ${activeTab === 'bookings' ? 'text-[#a84222]' : 'text-[#7c4226]'}`} />
-                  <span>Pending Orders (বুকিং তালিকা)</span>
-                  {activeTab === 'bookings' && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#a84222]"
-                    />
-                  )}
-                </button>
+                <Tab value="rates" label="Counter Rates" />
+                <Tab value="bookings" label="Pending Orders" />
               </>
             )}
-          </div>
+          </TabList>
         </nav>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
-        {/* Executive KPI Cards Grid (Grounded static summary cards) */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total UPI Revenue */}
-          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
-                  PhonePe UPI
-                </span>
-                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
-                  মোট UPI বিক্রি
-                </h3>
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6 min-w-0">
+        {/* Executive KPI Architectural Strip */}
+        <section aria-label="Key metrics" className="min-w-0">
+          <Card padding={0} elevation="low" className="overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#d8cab6] bg-[#FFFFFF]">
+              {/* KPI 1: Total UPI Revenue */}
+              <div className="p-4 sm:p-5 flex flex-col justify-between gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-sm text-[#111314]">
+                    Total UPI Sales · মোট বিক্রি
+                  </span>
+                  <QrCode className="w-4 h-4 text-[#a84222] flex-shrink-0" />
+                </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
+                  ₹{recapMetrics.total_revenue.toLocaleString('en-IN')}
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-[#7c4226] pt-2 border-t border-[#d8cab6]/70">
+                  <span className="tabular-nums">{recapMetrics.total_orders} verified payments</span>
+                  <Badge tone="whatsapp" label="Direct Bank" />
+                </div>
               </div>
-              <div className="p-2 rounded-full bg-[#a84222]/10 text-[#a84222] border border-[#a84222]/25">
-                <QrCode className="w-4 h-4" />
+
+              {/* KPI 2: Regular Customer Retention */}
+              <div className="p-4 sm:p-5 flex flex-col justify-between gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-sm text-[#111314]">
+                    Repeat Buyers · নিয়মিত হার
+                  </span>
+                  <Users className="w-4 h-4 text-[#6c2b11] flex-shrink-0" />
+                </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
+                  {recapMetrics.repeat_customer_rate}%
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-[#7c4226] pt-2 border-t border-[#d8cab6]/70">
+                  <span className="tabular-nums">
+                    {bestCustomers.filter((c) => c.total_visits > 1).length} repeat buyers
+                  </span>
+                  <Badge tone="ocher" label="Weekly Retention" />
+                </div>
               </div>
-            </div>
 
-            <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
-                ₹{recapMetrics.total_revenue.toLocaleString('en-IN')}
-              </span>
-            </div>
-
-            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
-              <span>{recapMetrics.total_orders} verified payments</span>
-              <Badge tone="whatsapp" label="Direct to Bank" />
-            </div>
-          </Surface>
-
-          {/* Card 2: Regular Customer Retention */}
-          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-xs font-bold text-[#6c2b11] uppercase tracking-wider block">
-                  Customer Loyalty
-                </span>
-                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
-                  নিয়মিত খরিদ্দার হার
-                </h3>
+              {/* KPI 3: Sunday Peak Rush */}
+              <div className="p-4 sm:p-5 flex flex-col justify-between gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-sm text-[#111314]">
+                    Sunday Rush · রবিবারের বিক্রি
+                  </span>
+                  <Flame className="w-4 h-4 text-[#a84222] flex-shrink-0" />
+                </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
+                  ₹{recapMetrics.sunday_revenue.toLocaleString('en-IN')}
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-[#7c4226] pt-2 border-t border-[#d8cab6]/70">
+                  <span className="tabular-nums">{recapMetrics.sunday_orders} Sunday orders</span>
+                  <Badge tone="crimson" label="Peak Day" />
+                </div>
               </div>
-              <div className="p-2 rounded-full bg-[#ebd3a2]/45 text-[#6c2b11] border border-[#e0b81f]/50">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
 
-            <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
-                {recapMetrics.repeat_customer_rate}%
-              </span>
-            </div>
-
-            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
-              <span>{bestCustomers.filter((c) => c.total_visits > 1).length} repeat weekly buyers</span>
-              <Badge tone="ocher" label="High Repeat" />
-            </div>
-          </Surface>
-
-          {/* Card 3: Sunday Peak Rush */}
-          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
-                  Sunday Peak Rush
-                </span>
-                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
-                  রবিবারের বিক্রি
-                </h3>
-              </div>
-              <div className="p-2 rounded-full bg-[#a84222]/10 text-[#a84222] border border-[#a84222]/25">
-                <Flame className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#6c2b11] tabular-nums">
-                ₹{recapMetrics.sunday_revenue.toLocaleString('en-IN')}
-              </span>
-            </div>
-
-            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
-              <span>{recapMetrics.sunday_orders} morning rush orders</span>
-              <Badge tone="crimson" label="Biggest Rush" />
-            </div>
-          </Surface>
-
-          {/* Card 4: Avg Order Ticket */}
-          <Surface variant="paper" padding="md" className="flex flex-col justify-between">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="text-xs font-bold text-[#7c4226] uppercase tracking-wider block">
-                  Average Ticket Size
-                </span>
-                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
-                  গড় কেনাকাটা
-                </h3>
-              </div>
-              <div className="p-2 rounded-full bg-[#f5ebd6] text-[#6c2b11] border border-[#d8cab6]">
-                <Wallet className="w-4 h-4" />
+              {/* KPI 4: Avg Order Ticket */}
+              <div className="p-4 sm:p-5 flex flex-col justify-between gap-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display font-bold text-sm text-[#111314]">
+                    Avg Ticket · গড় কেনাকাটা
+                  </span>
+                  <Wallet className="w-4 h-4 text-[#7c4226] flex-shrink-0" />
+                </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
+                  ₹{recapMetrics.weekly_aov.toLocaleString('en-IN')}
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-[#7c4226] pt-2 border-t border-[#d8cab6]/70">
+                  <span>Per counter sale</span>
+                  <Badge tone="neutral" label="~1.5–2 kg" className="font-mono tabular-nums" />
+                </div>
               </div>
             </div>
-
-            <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#111314] tabular-nums">
-                ₹{recapMetrics.weekly_aov}
-              </span>
-            </div>
-
-            <div className="pt-2.5 border-t border-[#d8cab6]/70 flex items-center justify-between gap-2 text-xs text-[#7c4226]">
-              <span>Per customer sale</span>
-              <Badge tone="neutral" label="~1.5kg – 2kg" className="font-mono tabular-nums" />
-            </div>
-          </Surface>
+          </Card>
         </section>
 
         {/* SECTION 1: Best Customers Leaderboard (সেরা খরিদ্দার তালিকা) */}
-        <section className="space-y-4">
-          <Surface variant="paper" padding="md" className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider">
-                    Customer Intelligence
-                  </span>
-                  <Badge
-                    tone="ocher"
-                    icon={<Crown className="w-3.5 h-3.5" />}
-                    label="VIP Retention"
-                  />
+        <section className="min-w-0">
+          <Card padding={0} elevation="low" className="overflow-hidden">
+            <div className="p-4 sm:p-6 space-y-5 bg-[#FFFFFF]">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="font-display font-bold text-lg sm:text-xl text-[#111314] tracking-tight">
+                    Best Customers · সেরা খরিদ্দার তালিকা
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#7c4226] mt-0.5">
+                    Ranked by lifetime PhonePe UPI spend. Tap any buyer to inspect order history.
+                  </p>
                 </div>
-                <h2 className="font-display font-extrabold text-base sm:text-lg text-[#111314] mt-1">
-                  সেরা খরিদ্দার তালিকা (Best Customers Leaderboard)
-                </h2>
-                <p className="text-xs text-[#7c4226]">
-                  Recognize and reward regular buyers based on PhonePe UPI payment handles.
-                </p>
+
+                {/* Filter Chips */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Chip
+                    active={customerFilter === 'ALL'}
+                    onClick={() => setCustomerFilter('ALL')}
+                  >
+                    All ({bestCustomers.length})
+                  </Chip>
+                  <Chip
+                    active={customerFilter === 'VIP'}
+                    tone="gold"
+                    icon={<Crown className="w-3.5 h-3.5" />}
+                    onClick={() => setCustomerFilter('VIP')}
+                  >
+                    VIP Regulars
+                  </Chip>
+                  <Chip
+                    active={customerFilter === 'FREQUENT'}
+                    icon={<Star className="w-3.5 h-3.5" />}
+                    onClick={() => setCustomerFilter('FREQUENT')}
+                  >
+                    Frequent
+                  </Chip>
+                  <Chip
+                    active={customerFilter === 'HIGH_SPEND'}
+                    onClick={() => setCustomerFilter('HIGH_SPEND')}
+                  >
+                    ₹500+ Avg
+                  </Chip>
+                </div>
               </div>
 
-              {/* Filter Chips */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Chip
-                  active={customerFilter === 'ALL'}
-                  onClick={() => setCustomerFilter('ALL')}
-                >
-                  All ({bestCustomers.length})
-                </Chip>
-                <Chip
-                  active={customerFilter === 'VIP'}
-                  onClick={() => setCustomerFilter('VIP')}
-                >
-                  👑 VIP Regulars
-                </Chip>
-                <Chip
-                  active={customerFilter === 'FREQUENT'}
-                  onClick={() => setCustomerFilter('FREQUENT')}
-                >
-                  ⭐ Frequent Buyers
-                </Chip>
-                <Chip
-                  active={customerFilter === 'HIGH_SPEND'}
-                  onClick={() => setCustomerFilter('HIGH_SPEND')}
-                >
-                  ₹500+ Spenders
-                </Chip>
-              </div>
-            </div>
+              <Divider />
 
-            {/* Customer Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCustomers.map((cust, index) => (
-                <button
-                  key={cust.customer_identifier}
-                  type="button"
-                  onClick={() => setSelectedCustomer(cust)}
-                  className={`w-full text-left p-3 rounded-[var(--radius-control)] border transition-[transform,border-color,box-shadow] duration-180 ease-[var(--ease-out-expo)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:shadow-md active:scale-[0.985] cursor-pointer space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 ${
-                    cust.loyalty_tier.includes('VIP')
-                      ? 'bg-[#ebd3a2]/25 border-[#e0b81f]/70'
-                      : 'bg-[#FAF7F2] border-[#d8cab6]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#6c2b11] text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
-                        {cust.customer_name ? cust.customer_name.charAt(0) : 'U'}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-display font-bold text-sm text-[#111314] truncate">
-                          {cust.customer_name || 'Regular Customer'}
-                        </h3>
-                        <span className="text-xs font-mono text-[#7c4226] truncate block">
-                          {cust.customer_identifier}
+              {/* Customer Cards Grid (Flat single-level cards, zero nested boxes) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCustomers.map((cust, index) => {
+                  const isVip = cust.loyalty_tier.includes('VIP');
+                  return (
+                    <button
+                      key={cust.customer_identifier}
+                      type="button"
+                      onClick={() => setSelectedCustomer(cust)}
+                      className={`w-full min-w-0 text-left p-4 rounded-[var(--radius-control)] border transition-[transform,border-color,background-color,box-shadow] duration-180 ease-[var(--ease-out-expo)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:shadow-md active:scale-[0.985] cursor-pointer space-y-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 ${
+                        isVip
+                          ? 'bg-[#f5ebd6]/65 border-[#e0b81f]/75'
+                          : 'bg-[#FAF7F2] border-[#d8cab6]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2.5 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-full font-display font-bold text-sm flex items-center justify-center flex-shrink-0 ${
+                              isVip
+                                ? 'bg-[#6c2b11] text-[#FAF7F2]'
+                                : 'bg-[#a84222] text-[#FFFFFF]'
+                            }`}
+                          >
+                            {cust.customer_name ? cust.customer_name.charAt(0) : 'U'}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-display font-bold text-sm text-[#111314] truncate">
+                              {cust.customer_name || 'Regular Customer'}
+                            </h3>
+                            <span className="text-xs font-mono text-[#7c4226] truncate block">
+                              {cust.customer_identifier}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold font-mono tabular-nums px-2 py-0.5 rounded-[var(--radius-concentric-control)] bg-[#FFFFFF] border border-[#d8cab6] text-[#6c2b11] flex-shrink-0">
+                          #{index + 1}
                         </span>
                       </div>
-                    </div>
-                    <span className="text-xs font-bold font-mono tabular-nums px-2 py-0.5 rounded-[var(--radius-concentric-control)] bg-white border border-[#d8cab6] text-[#6c2b11]">
-                      #{index + 1}
-                    </span>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#d8cab6]/70 text-center">
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-xs text-[#7c4226] block">Total Spent</span>
-                      <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
-                        ₹{cust.total_lifetime_spend.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-xs text-[#7c4226] block">Visits</span>
-                      <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
-                        {cust.total_visits} orders
-                      </span>
-                    </div>
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
-                      <span className="text-xs text-[#7c4226] block">Avg Ticket</span>
-                      <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
-                        ₹{cust.average_order_value}
-                      </span>
-                    </div>
-                  </div>
+                      <div className="grid grid-cols-3 divide-x divide-[#d8cab6] pt-3 border-t border-[#d8cab6]/80 text-center">
+                        <div className="px-1">
+                          <span className="text-[11px] text-[#7c4226] block">Spent</span>
+                          <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
+                            ₹{cust.total_lifetime_spend.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="px-1">
+                          <span className="text-[11px] text-[#7c4226] block">Visits</span>
+                          <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
+                            {cust.total_visits}
+                          </span>
+                        </div>
+                        <div className="px-1">
+                          <span className="text-[11px] text-[#7c4226] block">Avg</span>
+                          <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
+                            ₹{cust.average_order_value}
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex items-center justify-between text-xs text-[#7c4226] pt-1">
-                    <span className="truncate">
-                      Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit}d ago`}
-                    </span>
-                    <span className="text-[#6c2b11] font-semibold inline-flex items-center gap-0.5">
-                      <span>History</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </button>
-              ))}
+                      <div className="flex items-center justify-between text-xs text-[#7c4226] pt-1">
+                        <span className="truncate">
+                          Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit}d ago`}
+                        </span>
+                        <span className="text-[#6c2b11] font-semibold inline-flex items-center gap-0.5 flex-shrink-0">
+                          <span>History</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </Surface>
+          </Card>
         </section>
 
         {/* SECTION 2: PhonePe Statements Ledger */}
-        <section className="space-y-4">
-          <Surface variant="paper" padding="md" className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <span className="text-xs font-bold text-[#a84222] uppercase tracking-wider block">
-                  PhonePe Verified Statements
-                </span>
-                <h2 className="font-display font-extrabold text-base sm:text-lg text-[#111314]">
-                  পেমেন্ট হিস্ট্রি ও Bank UTR (UPI Ledger)
-                </h2>
+        <section className="min-w-0">
+          <Card padding={0} elevation="low" className="overflow-hidden">
+            <div className="p-4 sm:p-6 space-y-5 bg-[#FFFFFF]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-display font-bold text-lg sm:text-xl text-[#111314] tracking-tight">
+                    PhonePe UPI Ledger · পেমেন্ট হিস্ট্রি ও Bank UTR
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#7c4226] mt-0.5 tabular-nums">
+                    Showing {filteredPayments.length} of {payments.length} verified counter transactions.
+                  </p>
+                </div>
+
+                <div className="w-full sm:w-72 flex-shrink-0">
+                  <FieldInput
+                    type="search"
+                    label="Search transactions"
+                    isLabelHidden
+                    placeholder="Search Bank UTR, Customer..."
+                    icon={<Search className="w-4 h-4" />}
+                    value={searchQuery}
+                    onChange={(val) => setSearchQuery(val)}
+                  />
+                </div>
               </div>
 
-              <div className="w-full sm:w-72">
-                <FieldInput
-                  type="search"
-                  label="Search transactions"
-                  isLabelHidden
-                  placeholder="Search Bank UTR, Customer..."
-                  icon={<Search className="w-4 h-4" />}
-                  value={searchQuery}
-                  onChange={(val) => setSearchQuery(val)}
-                />
-              </div>
-            </div>
+              {/* Mobile Stacked Ledger List (< 768px) — zero horizontal overflow */}
+              <div className="md:hidden rounded-[var(--radius-control)] border border-[#d8cab6] divide-y divide-[#d8cab6]/80 bg-[#FFFFFF] overflow-hidden">
+                {filteredPayments.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-[#7c4226]">
+                    No transactions match your search filter.
+                  </div>
+                ) : (
+                  filteredPayments.map((p) => {
+                    const isCopied = copiedUtr === p.provider_reference_id;
+                    return (
+                      <div key={p.provider_reference_id} className="p-3.5 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <strong className="text-sm font-semibold text-[#111314] block truncate">
+                              {p.payer_name || 'Walk-in Customer'}
+                            </strong>
+                            {p.payer_vpa && (
+                              <span className="font-mono text-xs text-[#7c4226] block truncate">
+                                {p.payer_vpa}
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-mono font-bold text-sm text-[#15803D] tabular-nums flex-shrink-0">
+                            +₹{p.amount_rupees.toLocaleString('en-IN')}
+                          </span>
+                        </div>
 
-            {/* Responsive Table Container */}
-            <div className="overflow-x-auto rounded-[var(--radius-control)] border border-[#d8cab6]">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF7F2] border-b border-[#d8cab6] text-[#7c4226] font-semibold">
-                  <tr>
-                    <th className="p-3">Date & Time (তারিখ ও সময়)</th>
-                    <th className="p-3">Customer / Payer VPA</th>
-                    <th className="p-3">Bank UTR / Reference</th>
-                    <th className="p-3">Cut Style / Note</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Amount (টাকা)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#d8cab6]/70 bg-white">
-                  {filteredPayments.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-6 text-center text-[#7c4226]">
-                        No transactions match your search filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPayments.map((p) => (
-                      <tr key={p.provider_reference_id} className="hover:bg-[#FAF7F2]/60 transition-[background-color] duration-150 ease-[var(--ease-out-expo)]">
-                        <td className="p-3 font-mono text-[#7c4226] whitespace-nowrap">
-                          {new Date(p.paid_at).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                          })}{' '}
-                          ·{' '}
-                          {new Date(p.paid_at).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className="p-3">
-                          <strong className="text-[#111314] block">{p.payer_name || 'Walk-in Customer'}</strong>
-                          {p.payer_vpa && (
-                            <span className="font-mono text-xs text-[#7c4226] block">
-                              {p.payer_vpa}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          <div className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
-                            <code className="font-mono font-medium text-xs text-[#111314] tabular-nums">
+                        <div className="flex items-center justify-between gap-2 text-xs text-[#7c4226]">
+                          <span className="truncate">{p.notes || 'UPI Counter Sale'}</span>
+                          <span className="font-mono tabular-nums flex-shrink-0">
+                            {new Date(p.paid_at).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                            })}{' '}
+                            ·{' '}
+                            {new Date(p.paid_at).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <div className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6] max-w-full min-w-0">
+                            <code className="font-mono font-medium text-xs text-[#111314] tabular-nums truncate">
                               {p.provider_reference_id}
                             </code>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(p.provider_reference_id)}
-                              className="inline-flex items-center justify-center p-1.5 min-w-[28px] min-h-[28px] rounded-[var(--radius-concentric-control)] text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+                              className="inline-flex items-center justify-center px-1.5 min-h-[28px] rounded-[var(--radius-concentric-control)] text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
                               title="Copy Bank UTR"
                               aria-label={`Copy Bank UTR ${p.provider_reference_id}`}
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              {isCopied ? (
+                                <span className="text-[11px] font-semibold text-[#15803D]">Copied</span>
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
                             </button>
                           </div>
-                        </td>
-                        <td className="p-3 text-[#7c4226]">{p.notes || 'UPI Counter Sale'}</td>
-                        <td className="p-3">
                           <Badge tone="whatsapp" label={p.status} />
-                        </td>
-                        <td className="p-3 text-right font-mono font-bold text-sm text-[#15803D] tabular-nums">
-                          +₹{p.amount_rupees.toLocaleString('en-IN')}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Desktop Ledger Table (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto rounded-[var(--radius-control)] border border-[#d8cab6]">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FAF7F2] border-b border-[#d8cab6] text-[#7c4226] font-semibold">
+                    <tr>
+                      <th className="p-3.5">Date & Time (তারিখ ও সময়)</th>
+                      <th className="p-3.5">Customer / Payer VPA</th>
+                      <th className="p-3.5">Bank UTR / Reference</th>
+                      <th className="p-3.5">Cut Style / Note</th>
+                      <th className="p-3.5">Status</th>
+                      <th className="p-3.5 text-right">Amount (টাকা)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#d8cab6]/70 bg-[#FFFFFF]">
+                    {filteredPayments.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-6 text-center text-[#7c4226]">
+                          No transactions match your search filter.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredPayments.map((p) => {
+                        const isCopied = copiedUtr === p.provider_reference_id;
+                        return (
+                          <tr
+                            key={p.provider_reference_id}
+                            className="hover:bg-[#FAF7F2]/70 transition-[background-color] duration-150 ease-[var(--ease-out-expo)]"
+                          >
+                            <td className="p-3.5 font-mono text-[#7c4226] whitespace-nowrap tabular-nums">
+                              {new Date(p.paid_at).toLocaleDateString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                              })}{' '}
+                              ·{' '}
+                              {new Date(p.paid_at).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="p-3.5">
+                              <strong className="text-[#111314] block">
+                                {p.payer_name || 'Walk-in Customer'}
+                              </strong>
+                              {p.payer_vpa && (
+                                <span className="font-mono text-xs text-[#7c4226] block">
+                                  {p.payer_vpa}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3.5">
+                              <div className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
+                                <code className="font-mono font-medium text-xs text-[#111314] tabular-nums">
+                                  {p.provider_reference_id}
+                                </code>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(p.provider_reference_id)}
+                                  className="inline-flex items-center justify-center px-1.5 min-w-[28px] min-h-[28px] rounded-[var(--radius-concentric-control)] text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active:scale-97 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
+                                  title="Copy Bank UTR"
+                                  aria-label={`Copy Bank UTR ${p.provider_reference_id}`}
+                                >
+                                  {isCopied ? (
+                                    <span className="text-[11px] font-semibold text-[#15803D]">
+                                      Copied
+                                    </span>
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                            <td className="p-3.5 text-[#7c4226]">{p.notes || 'UPI Counter Sale'}</td>
+                            <td className="p-3.5">
+                              <Badge tone="whatsapp" label={p.status} />
+                            </td>
+                            <td className="p-3.5 text-right font-mono font-bold text-sm text-[#15803D] tabular-nums">
+                              +₹{p.amount_rupees.toLocaleString('en-IN')}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </Surface>
+          </Card>
         </section>
       </main>
 
@@ -923,14 +908,29 @@ export function EarningsDashboard({
               </div>
               <div>
                 <span className="text-xs text-[#7c4226] block">Loyalty Tier</span>
-                <span className="text-xs font-semibold text-[#6c2b11]">
-                  {selectedCustomer.loyalty_tier}
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#6c2b11]">
+                  {selectedCustomer.loyalty_tier.includes('VIP') ? (
+                    <>
+                      <Crown className="w-3.5 h-3.5 text-[#a84222]" />
+                      <span>VIP Regular</span>
+                    </>
+                  ) : selectedCustomer.loyalty_tier.includes('Frequent') ? (
+                    <>
+                      <Star className="w-3.5 h-3.5 text-[#6c2b11]" />
+                      <span>Frequent</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-3.5 h-3.5 text-[#7c4226]" />
+                      <span>Occasional</span>
+                    </>
+                  )}
                 </span>
               </div>
             </div>
 
             <div>
-              <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#7c4226] mb-2">
+              <h4 className="font-display font-bold text-sm text-[#111314] mb-2">
                 Purchase History from PhonePe Statements
               </h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">

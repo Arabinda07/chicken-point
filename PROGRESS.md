@@ -56,42 +56,44 @@
   - **Step 2**: Converted the `#cuts` category pills and 8-card grid into `@astryxdesign/core`'s `<TabList role="tablist" overflow="scroll">` + `<Carousel gap={3} hasButtons hasEdgeFade hasSnap={useSnapPaging({ pages: 'item' })}>`.
   - **Step 3**: Stripped product cards down by ~65% to a 4-element visual-first anatomy (`<Card>`, `<AspectRatio ratio={4 / 3} fit="cover">` with bespoke Sanzo Wada cut art plates and at most 1 `<Badge>` on 3 signature cuts, single-row English+Bengali title, 3-word spec line, and unified `<SegmentedControl>` + tabular price + `+ Add` footer).
   - **Step 4**: Streamlined Band 1 Hero right column (`<Card>` + `<AspectRatio>` + `<StatusDot>` + `assets/logo.jpeg`), converted Band 4 `#standards` left card to a 2-tab `<TabList>` (`Counter Process` | `Scan & Pay QR`), and upgraded `CartDrawer.tsx` to `@astryxdesign/core`'s native top-layer `<Drawer>` + `<DrawerHeader>` + `<SegmentedControl>`.
+- [x] **Right-Side Surfaces Rebuild, StyleX/Tailwind Cascade Fix & Full-Container QR `<Carousel>`**:
+  - **CSS Cascade Layer Ordering (`src/main.tsx`, `src/index.css`)**: Declared `@layer theme, base, reset, astryx-base, astryx-theme, components, utilities;` before `@import "tailwindcss";` and imported `./index.css` first in `src/main.tsx` so Tailwind v4's `@layer base` preflight (`* { padding: 0; border: 0 solid; }`) no longer wipes out `@astryxdesign/core` StyleX borders and paddings (`--border-width: 1px`, `--radius-container: 1.5rem`).
+  - **Band 1 Hero Right-Column Showcase (`src/App.tsx`)**: Rebuilt into a structured Sanzo Wada counter voucher card (`<Card padding={0} elevation="low">`) with a live status strip (`Open Now · 8 AM – 9 PM` + `Fuljhore Market`), framed `assets/logo.jpeg` emblem, Bengali accent (`বিকাশ চিকেন পয়েন্ট`), 3-step architectural workflow strip (`Pre-Book List` | `Cut Fresh Live` | `Pay at Scale`), and verified Udyam MSME / direct phone footer.
+  - **Band 4 Full-Container QR `<Carousel>` (`src/App.tsx`, `src/index.css`)**: Replaced the two tiny 144px thumbnail buttons and `activeQrPreview` `ModalSheet` with a full-container `@astryxdesign/core` `<Carousel gap={0} hasButtons hasEdgeFade={false} hasSnap={useSnapPaging({ pages: 'item' })}>` synced bidirectionally with `<TabList>` (`UPI Payment QR` | `Google Review QR`), showcasing `assets/QR1.png` and `assets/Shop_GoogleQR.png` at full scannable height (`340px–380px`).
+  - **3-Zone Slide-Over Cart Drawer (`src/components/ui/CartDrawer.tsx`)**: Rebuilt `<Drawer padding={0}>` with pinned header (`px-5 sm:px-6 pt-5 pb-4`), scrollable body (`px-5 sm:px-6 py-5`), two-line mobile-safe cart item cards (zero title truncation at `375px`), pinned bottom summary + `tone="whatsapp"` primary CTA, and a full-size scannable `assets/QR1.png` (`h-56 sm:h-64`) in the confirmed state.
 
 ---
 
-## 3. Next Session Roadmap (Execute Step-by-Step — Not All at Once)
+## 3. Next Session Roadmap (Final Polish, SEO Schema & Release)
 
-### Step 1: Wada Sanzo Color Palette Upgrade (`https://www.wada-sanzo-colors.com/` & `DESIGN.md`)
-- [x] Replace the current sterile/bland zinc-and-white palette (`#FAFAF9`, `#E4E4E7`, `#18181B`, `#52525B`, `#B91C1C`, `#D97706`) with a warm, tactile **Sanzo Wada** color combination anchored in `DESIGN.md` and `wada-sanzo-colors.com` (warm cream paper `#FAF7F2`, sandstone `#f5ebd6`, ivory buff `#ebd3a2`, ecru 1px borders `#d8cab6`, brick red `#a84222`, deep brown `#6c2b11`, yellow ocher `#e0b81f`, Wada black `#111314`, warm brown `#7c4226`).
-- [x] Apply the palette cleanly across `src/index.css` (aligned with `@astryxdesign/core` `[data-astryx-theme="stone"]` tokens), `src/components/ui/*`, and the 6 bands in `src/App.tsx` without re-introducing clutter.
-- [x] *Paused for user review before moving to Step 2.*
+### Step 1: LocalBusiness / ButcherShop JSON-LD Schema (`index.html`)
+- [x] Add structured JSON-LD (`@type: ["LocalBusiness", "FoodEstablishment", "ButcherShop"]`) in `index.html` with accurate verified shop details from `PRODUCT.md`:
+  - Name: `Bikash Chicken Point` (`বিকাশ চিকেন পয়েন্ট`)
+  - Address: `Sabji Market, Fuljhore, Durgapur-713206, West Bengal, IN`
+  - Telephone / WhatsApp: `+91 96350 21694`
+  - Opening Hours: `Mo-Su 08:00-21:00` (`Asia/Kolkata`)
+  - Payment Accepted: `Cash, UPI (9635021694@okbizaxis)`
+  - Identifier: `UDYAM-I-WB-23-8437469`
+  - **Honesty Rule**: Never include fake `aggregateRating` or fabricated review counts.
 
-### Step 2: Copy Audit & De-Slop (`unslop` Skill)
-- [x] Run a two-pass `unslop` audit across `src/data.ts`, `src/App.tsx`, and `src/components/ui/CartDrawer.tsx`.
-- [x] Rewrite headlines, subheadlines, 1-line cut descriptions, trust pillars, and the shop story so they sound unmistakably like a real, trustworthy Fuljhore neighborhood shop (`PRODUCT.md`).
-- [x] *Paused for user review before moving to Step 3.*
+### Step 2: `/admin` Route (`EarningsDashboard.tsx`) Wada Sanzo & `@astryxdesign/core` Polish
+- [x] Audit `/admin` (`src/components/EarningsDashboard.tsx`) at `375px` and `1440px` in headless Chrome.
+- [x] Align its surfaces, borders, typography, and controls with `DESIGN.md` (Sanzo Wada warm cream paper `#FAF7F2`, sandstone `#f5ebd6`, 1px ecru borders `#d8cab6`, brick red `#a84222`, deep brown `#6c2b11`, tabular-nums pricing) and `@astryxdesign/core` primitives.
 
-### Step 3: UI Craft & Visual Polish (`impeccable` + `emil-design-eng` Skills)
-- [x] Refine optical alignment, concentric corner radii (`--radius-panel` vs `--radius-concentric-panel`), card depth (`.surface-paper` & subtle top-edge bezel highlights), and upgrade the `4:3` and `16:10` visual frames so they feel crafted rather than placeholder-like.
-- [x] Ensure real counter assets (`assets/QR1.png`, `assets/Shop_GoogleQR.png`, `assets/logo.jpeg`) are surfaced with high visual clarity where appropriate.
-- [x] *Paused for user review before moving to Step 4.*
-
-### Step 4: Animations & Micro-Interactions (`emil-design-eng` Skill)
-- [x] Audit and implement purposeful, physical motion:
-  - Custom exponential easing (`--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1)`) and drawer easing (`--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)`).
-  - Tactile `:active` scale feedback (`scale(0.97)`) on buttons, category pills, and `500g / 1kg` weight toggles.
-  - Smooth category filter transitions, tabular price transitions when toggling `500g` / `1kg`, Cart badge bump feedback on `+ Add`, and polished Cart Drawer enter/exit transitions.
-  - Full `prefers-reduced-motion: reduce` compliance.
-- [x] Run final `375px` and `1440px` verification.
+### Step 3: `.gitignore` Cleanup, Final Build & Git Push
+- [x] Add `.reference/` to `.gitignore` so external reference HTML is excluded from version control.
+- [x] Run `npm run lint && npm run build` and verify zero errors.
+- [x] Stage, commit with a clear message, and push to the remote repository.
 
 ---
 
 ## 4. Starting Prompt for Next Session
 
 ```text
-Read PROGRESS.md, PRODUCT.md, and DESIGN.md first. We are improving the 6-band Bikash Chicken Point storefront step-by-step—do NOT do everything at once.
+Read PROGRESS.md, PRODUCT.md, and DESIGN.md first, and load the `impeccable` and `emil-design-eng` skills.
 
-Load the `impeccable`, `emil-design-eng`, and `unslop` skills. We will work through the 4 steps in PROGRESS.md one at a time, pausing for my approval after each step:
-
-Step 1 (Start here): Upgrade the color palette from the current bland zinc/white palette to a warm, tactile Sanzo Wada palette inspired by https://www.wada-sanzo-colors.com/ and DESIGN.md (warm cream paper canvas, sandstone/ivory-buff secondary tints, ecru 1px hairlines, brick red & deep brown primary accents, yellow ocher highlights, and Wada black/warm brown ink) while keeping our clean 6-band layout and spacing intact. Propose the exact Wada Sanzo color combination and apply Step 1 only, then stop for my review before moving to Step 2 (unslop copy), Step 3 (impeccable UI polish), and Step 4 (emil-design-eng animations).
+Execute the final polish & release roadmap in PROGRESS.md:
+1. **LocalBusiness JSON-LD Schema (`index.html`)**: Add honest, verified `LocalBusiness` / `ButcherShop` structured data in `index.html` using exact details from `PRODUCT.md` (Sabji Market, Fuljhore, Durgapur-713206, `+91 96350 21694`, daily `08:00–21:00`, UPI `9635021694@okbizaxis`, Udyam `UDYAM-I-WB-23-8437469` — no fake ratings or reviews).
+2. **`/admin` Route Polish (`src/components/EarningsDashboard.tsx`)**: Audit `/admin` in headless Chrome at `375px` and `1440px`, then restyle and refine `EarningsDashboard.tsx` so its cards, tables/lists, inputs, and header match `DESIGN.md` (Sanzo Wada warm paper palette, 1px ecru hairlines, `tabular-nums` ledger clarity, and clean `@astryxdesign/core` surfaces). Verify with `375px` and `1440px` screenshots.
+3. **Repo Cleanup & Push**: Add `.reference/` to `.gitignore`, run `npm run lint && npm run build`, and once everything passes cleanly, stage, commit, and push to remote.
 ```

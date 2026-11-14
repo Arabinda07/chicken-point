@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Phone,
   MessageCircle,
@@ -13,9 +13,6 @@ import {
   Truck,
   Plus,
   Scale,
-  Award,
-  Flame,
-  QrCode,
   ExternalLink,
 } from 'lucide-react';
 import {
@@ -30,13 +27,13 @@ import { EarningsDashboard } from './components/EarningsDashboard';
 import { Button } from './components/ui/Button';
 import { Surface } from './components/ui/Surface';
 import { Badge } from './components/ui/Badge';
-import { ModalSheet } from './components/ui/ModalSheet';
 import { CartDrawer, type CartItem, type WeightUnit } from './components/ui/CartDrawer';
 import {
   AspectRatio,
   Badge as AstryxBadge,
   Card,
   Carousel,
+  type CarouselHandle,
   Divider,
   SegmentedControl,
   SegmentedControlItem,
@@ -191,6 +188,8 @@ function renderCutPlateArt(productId: string) {
 export default function App() {
   const toast = useToast();
   const snapPaging = useSnapPaging({ pages: 'item' });
+  const qrSnapPaging = useSnapPaging({ pages: 'item' });
+  const qrCarouselRef = useRef<CarouselHandle | null>(null);
   const [pathname, setPathname] = useState<string>(() => window.location.pathname);
 
   useEffect(() => {
@@ -225,8 +224,7 @@ export default function App() {
   const [requestInvoice, setRequestInvoice] = useState<boolean>(false);
   const [orderConfirmed, setOrderConfirmed] = useState<{ code: string; message: string } | null>(null);
   const [ariaAnnouncement, setAriaAnnouncement] = useState<string>('');
-  const [activeQrPreview, setActiveQrPreview] = useState<'upi' | 'google' | null>(null);
-  const [standardsTab, setStandardsTab] = useState<'process' | 'qr'>('process');
+  const [activeQrSlide, setActiveQrSlide] = useState<'upi' | 'google'>('upi');
   const [swappingWeightId, setSwappingWeightId] = useState<string | null>(null);
   const [isCartBumping, setIsCartBumping] = useState<boolean>(false);
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
@@ -531,61 +529,95 @@ Please confirm availability!`;
                 </div>
               </div>
 
-              {/* Right Column: Visual-First 4:3 Counter Showcase */}
+              {/* Right Column: Crafted Neighborhood Counter Showcase Card */}
               <div className="lg:col-span-6">
-                <Card padding={0} className="overflow-hidden">
-                  <AspectRatio ratio={4 / 3}>
-                    <div className="w-full h-full bg-gradient-to-br from-[#FAF7F2] via-[#f5ebd6]/75 to-[#ebd3a2]/45 p-5 sm:p-7 flex flex-col justify-between relative">
-                      {/* Top Status Row with Live @astryxdesign/core StatusDot */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFFFFF] border border-[#d8cab6]">
-                          <StatusDot
-                            variant={isCounterOpenNow ? 'success' : 'warning'}
-                            label={isCounterOpenNow ? 'Counter Open' : 'Opens 8 AM'}
-                            isPulsing={isCounterOpenNow}
-                          />
-                          <span className="text-xs font-semibold text-[#111314]">
-                            {isCounterOpenNow ? 'Counter Open · 8 AM – 9 PM IST' : 'Daily · 8 AM – 9 PM IST'}
+                <Card padding={0} elevation="low" className="overflow-hidden">
+                  <div className="flex flex-col bg-[#FFFFFF]">
+                    {/* 1. Top Live Counter Status Strip */}
+                    <div className="px-5 py-3.5 sm:px-6 sm:py-4 bg-[#f5ebd6]/75 border-b border-[#d8cab6] flex items-center justify-between gap-3">
+                      <div className="inline-flex items-center gap-2 min-w-0">
+                        <StatusDot
+                          variant={isCounterOpenNow ? 'success' : 'warning'}
+                          label={isCounterOpenNow ? 'Counter Open' : 'Opens 8 AM'}
+                          isPulsing={isCounterOpenNow}
+                        />
+                        <span className="text-xs font-semibold text-[#111314] truncate">
+                          {isCounterOpenNow ? 'Open Now · 8 AM – 9 PM' : 'Daily · 8 AM – 9 PM'}
+                        </span>
+                      </div>
+
+                      <span className="font-mono text-xs font-semibold text-[#6c2b11] px-2.5 py-1 rounded-full bg-[#ebd3a2]/85 border border-[#e0b81f]/60 flex-shrink-0">
+                        Fuljhore Market
+                      </span>
+                    </div>
+
+                    {/* 2. Shop Emblem & Identity Anchor */}
+                    <div className="p-5 sm:p-7 bg-gradient-to-br from-[#FFFFFF] via-[#FAF7F2] to-[#f5ebd6]/55 flex flex-col sm:flex-row items-center gap-4 sm:gap-5 text-center sm:text-left">
+                      <img
+                        src={logoUrl}
+                        alt="Bikash Chicken Point Counter Emblem"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain bg-[#FFFFFF] p-1.5 border border-[#d8cab6] shadow-2xs flex-shrink-0"
+                        width="96"
+                        height="96"
+                      />
+                      <div className="space-y-1.5 min-w-0">
+                        <h2 className="font-display font-bold text-xl sm:text-2xl text-[#111314] tracking-tight">
+                          {siteData.shopName}
+                        </h2>
+                        <p className="font-bengali text-xs sm:text-sm font-semibold text-[#6c2b11]">
+                          {siteData.shopNameBengali} · ফুলঝোড় সবজি মার্কেট
+                        </p>
+                        <p className="text-xs text-[#7c4226] leading-relaxed">
+                          Sabji Market, Fuljhore, Durgapur-713206 ·{' '}
+                          <span className="font-mono font-medium text-[#6c2b11]">
+                            {siteData.udyamRegistrationNumber}
                           </span>
-                        </div>
+                        </p>
+                      </div>
+                    </div>
 
-                        <span className="font-mono text-xs font-semibold text-[#6c2b11] px-2.5 py-1 rounded-full bg-[#ebd3a2]/75 border border-[#e0b81f]/60">
-                          Fuljhore Market
+                    {/* 3. Architectural 3-Column Counter Workflow Strip */}
+                    <div className="grid grid-cols-3 divide-x divide-[#d8cab6] border-t border-[#d8cab6] bg-[#FFFFFF] text-center">
+                      <div className="px-2.5 py-3.5 sm:px-4 sm:py-4 space-y-0.5">
+                        <span className="font-display font-bold text-xs sm:text-sm text-[#111314] block">
+                          Pre-Book List
+                        </span>
+                        <span className="text-[11px] sm:text-xs text-[#7c4226] block">
+                          WhatsApp or Call
                         </span>
                       </div>
-
-                      {/* Center Visual Counter Emblem & Brand Identity */}
-                      <div className="my-auto flex flex-col items-center text-center space-y-3">
-                        <div className="relative">
-                          <img
-                            src={logoUrl}
-                            alt="Bikash Chicken Point Counter"
-                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-[#a84222] shadow-md bg-[#FFFFFF]"
-                            width="112"
-                            height="112"
-                          />
-                        </div>
-                        <div className="space-y-0.5">
-                          <h2 className="font-display font-bold text-lg sm:text-xl text-[#111314]">
-                            {siteData.shopName}
-                          </h2>
-                          <p className="font-bengali text-xs sm:text-sm font-medium text-[#6c2b11]">
-                            {siteData.shopNameBengali} · ফুলঝোড় সবজি মার্কেট
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Bottom Visual Counter Flow Summary */}
-                      <div className="px-3.5 py-2.5 rounded-[var(--radius-concentric-panel)] bg-[#FFFFFF]/90 border border-[#d8cab6] flex items-center justify-between gap-2 text-xs">
-                        <span className="font-semibold text-[#111314]">
-                          Pre-Book · We Cut Fresh · Pay at Scale
+                      <div className="px-2.5 py-3.5 sm:px-4 sm:py-4 space-y-0.5">
+                        <span className="font-display font-bold text-xs sm:text-sm text-[#111314] block">
+                          Cut Fresh Live
                         </span>
-                        <span className="font-mono font-semibold text-[#15803D] flex-shrink-0">
-                          Zero Advance
+                        <span className="text-[11px] sm:text-xs text-[#7c4226] block">
+                          After You Order
+                        </span>
+                      </div>
+                      <div className="px-2.5 py-3.5 sm:px-4 sm:py-4 space-y-0.5">
+                        <span className="font-display font-bold text-xs sm:text-sm text-[#111314] block">
+                          Pay at Scale
+                        </span>
+                        <span className="text-[11px] sm:text-xs text-[#7c4226] block">
+                          UPI or Cash Live
                         </span>
                       </div>
                     </div>
-                  </AspectRatio>
+
+                    {/* 4. Bottom Verification & Direct Phone Bar */}
+                    <div className="px-5 py-3.5 sm:px-6 sm:py-4 bg-[#FAF7F2] border-t border-[#d8cab6] flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="font-mono font-semibold text-[#15803D]">
+                        Zero Advance · Confirm Rate at Scale
+                      </span>
+                      <a
+                        href={`tel:${siteData.phone}`}
+                        className="press-scale inline-flex items-center gap-1.5 font-semibold text-[#a84222] hover:text-[#6c2b11]"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span className="font-mono tabular-nums">{siteData.phone}</span>
+                      </a>
+                    </div>
+                  </div>
                 </Card>
               </div>
             </div>
@@ -808,118 +840,130 @@ Please confirm availability!`;
         <section id="standards" className="py-16 md:py-24 border-b border-[#d8cab6]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              {/* Left Column: 4:3 Tabbed Card (Counter Process | Scan & Pay QR) */}
+              {/* Left Column: Full-Container Counter QR Standee Carousel */}
               <div className="lg:col-span-6">
-                <Card padding={0} className="overflow-hidden">
-                  <AspectRatio ratio={4 / 3}>
-                    <div className="w-full h-full bg-[#FFFFFF] p-4 sm:p-6 flex flex-col justify-between">
-                      {/* Header with @astryxdesign/core TabList */}
-                      <div className="flex items-center justify-between gap-3 border-b border-[#d8cab6] pb-3">
-                        <TabList
-                          value={standardsTab}
-                          onChange={(val) => setStandardsTab(val as 'process' | 'qr')}
-                          role="tablist"
-                          size="sm"
-                          aria-label="Counter process and QR standees"
-                        >
-                          <Tab value="process" label="Counter Process" />
-                          <Tab value="qr" label="Scan & Pay QR" />
-                        </TabList>
+                <Card padding={0} elevation="low" className="overflow-hidden">
+                  <div className="flex flex-col bg-[#FFFFFF]">
+                    {/* Header with @astryxdesign/core TabList syncing with Carousel */}
+                    <div className="px-4 sm:px-6 pt-3.5 pb-0 bg-[#f5ebd6]/60 border-b border-[#d8cab6] flex items-center justify-between gap-3">
+                      <TabList
+                        value={activeQrSlide}
+                        onChange={(val) => {
+                          const next = val as 'upi' | 'google';
+                          setActiveQrSlide(next);
+                          qrCarouselRef.current?.scrollTo(next === 'upi' ? 0 : 1);
+                        }}
+                        role="tablist"
+                        size="sm"
+                        aria-label="Counter QR Standees"
+                      >
+                        <Tab value="upi" label="UPI Payment QR" />
+                        <Tab value="google" label="Google Review QR" />
+                      </TabList>
 
-                        <span className="hidden sm:inline-block text-[11px] font-mono text-[#7c4226] truncate">
-                          {siteData.udyamRegistrationNumber}
-                        </span>
-                      </div>
+                      <span className="hidden sm:inline-block text-[11px] font-mono text-[#6c2b11] pb-2.5 truncate">
+                        {siteData.udyamRegistrationNumber}
+                      </span>
+                    </div>
 
-                      {/* Tab Panel Content */}
-                      {standardsTab === 'process' ? (
-                        <div className="my-auto grid grid-cols-2 gap-3 py-2">
-                          <div className="p-3.5 sm:p-4 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] border border-[#d8cab6] space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-[#15803D] font-semibold text-xs sm:text-sm">
-                              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                              <span>Fresh to Order</span>
-                            </div>
-                            <p className="text-xs text-[#111314] leading-relaxed">
-                              Cleaned and cut after your order arrives. Zero freezer burn.
-                            </p>
-                          </div>
-
-                          <div className="p-3.5 sm:p-4 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] border border-[#d8cab6] space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-[#a84222] font-semibold text-xs sm:text-sm">
-                              <Flame className="w-4 h-4 flex-shrink-0" />
-                              <span>Never Frozen</span>
-                            </div>
-                            <p className="text-xs text-[#7c4226] leading-relaxed">
-                              No cold-storage trays or overnight pre-cut stock.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="my-auto grid grid-cols-2 gap-3 py-2">
-                          <button
-                            type="button"
-                            onClick={() => setActiveQrPreview('upi')}
-                            className="press-scale hover-lift p-3 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] hover:bg-[#f5ebd6]/75 border border-[#d8cab6] hover:border-[#c2ae93] flex flex-col items-center text-center gap-2 cursor-pointer"
-                          >
+                    {/* Full-Container @astryxdesign/core Carousel */}
+                    <div
+                      onScrollCapture={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target && target.clientWidth > 0) {
+                          const idx = Math.round(target.scrollLeft / target.clientWidth);
+                          const nextSlide = idx >= 1 ? 'google' : 'upi';
+                          if (nextSlide !== activeQrSlide) {
+                            setActiveQrSlide(nextSlide);
+                          }
+                        }
+                      }}
+                    >
+                      <Carousel
+                        handleRef={qrCarouselRef}
+                        gap={0}
+                        hasButtons
+                        hasEdgeFade={false}
+                        hasSnap={qrSnapPaging}
+                        aria-label="Counter QR standees for Google Pay UPI and Google Business Profile"
+                        className="qr-standee-carousel w-full"
+                      >
+                        {/* Slide 1: Full-Size Google Pay / BHIM UPI Standee */}
+                        <div className="w-full flex flex-col bg-[#FFFFFF]">
+                          <div className="w-full h-[340px] sm:h-[380px] p-4 sm:p-6 flex items-center justify-center bg-[#FFFFFF]">
                             <img
                               src={qrUpiUrl}
-                              alt="Google Pay / BHIM UPI QR Standee"
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius-concentric-control)] object-cover border border-[#d8cab6] bg-[#FFFFFF] p-1"
-                              width="80"
-                              height="80"
-                              loading="lazy"
+                              alt="Google Pay / BHIM UPI Counter Standee (9635021694@okbizaxis)"
+                              className="max-w-full max-h-full w-auto h-full object-contain rounded-[var(--radius-concentric-control)]"
+                              width="899"
+                              height="1280"
                             />
-                            <div className="min-w-0 w-full">
-                              <span className="text-xs font-semibold text-[#111314] block truncate">
-                                Google Pay / UPI
+                          </div>
+
+                          <div className="px-4 sm:px-6 py-3.5 bg-[#FAF7F2] border-t border-[#d8cab6] flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="space-y-0.5">
+                              <span className="font-semibold text-[#111314] block">
+                                Google Pay / BHIM UPI Standee
                               </span>
-                              <span className="text-[11px] font-mono text-[#7c4226] block truncate">
-                                {siteData.upiId}
+                              <span className="font-mono text-[#6c2b11] block">
+                                UPI ID: {siteData.upiId}
                               </span>
                             </div>
-                          </button>
+                            <Badge tone="whatsapp" label="Pay After Weighing" />
+                          </div>
+                        </div>
 
-                          <button
-                            type="button"
-                            onClick={() => setActiveQrPreview('google')}
-                            className="press-scale hover-lift p-3 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] hover:bg-[#f5ebd6]/75 border border-[#d8cab6] hover:border-[#c2ae93] flex flex-col items-center text-center gap-2 cursor-pointer"
-                          >
+                        {/* Slide 2: Full-Size Google Business Profile & Review Standee */}
+                        <div className="w-full flex flex-col bg-[#FFFFFF]">
+                          <div className="w-full h-[340px] sm:h-[380px] p-4 sm:p-6 flex items-center justify-center bg-[#FFFFFF]">
                             <img
                               src={qrGoogleUrl}
-                              alt="Google Business Profile Review QR Standee"
-                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius-concentric-control)] object-cover border border-[#d8cab6] bg-[#FFFFFF] p-1"
-                              width="80"
-                              height="80"
-                              loading="lazy"
+                              alt="Bikash Chicken Shop Google Business Profile & Review QR Standee"
+                              className="max-w-full max-h-full w-full h-auto object-contain rounded-[var(--radius-concentric-control)]"
+                              width="1508"
+                              height="848"
                             />
-                            <div className="min-w-0 w-full">
-                              <span className="text-xs font-semibold text-[#111314] block truncate">
-                                Google Review QR
+                          </div>
+
+                          <div className="px-4 sm:px-6 py-3.5 bg-[#FAF7F2] border-t border-[#d8cab6] flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="space-y-0.5">
+                              <span className="font-semibold text-[#111314] block">
+                                Google Business Profile & Review QR
                               </span>
-                              <span className="text-[11px] text-[#a84222] font-medium inline-flex items-center justify-center gap-1">
-                                <QrCode className="w-3 h-3 flex-shrink-0" />
-                                <span>Tap to Enlarge</span>
+                              <span className="text-[#7c4226] block">
+                                Bikash Chicken Shop · Fuljhore, Durgapur
                               </span>
                             </div>
-                          </button>
+                            <a
+                              href={siteData.googleProfileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="press-scale inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-chip)] bg-[#FFFFFF] border border-[#d8cab6] hover:bg-[#f5ebd6] font-semibold text-[#a84222]"
+                            >
+                              <span>Open on Google</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
                         </div>
-                      )}
-
-                      {/* Footer Verification Bar */}
-                      <div className="pt-2.5 border-t border-[#d8cab6] flex items-center justify-between text-xs text-[#7c4226]">
-                        <span>Verified Merchant · Sabji Market, Fuljhore</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setStandardsTab(standardsTab === 'process' ? 'qr' : 'process')
-                          }
-                          className="font-semibold text-[#a84222] hover:text-[#6c2b11] cursor-pointer"
-                        >
-                          {standardsTab === 'process' ? 'View Counter QRs →' : '← View Process'}
-                        </button>
-                      </div>
+                      </Carousel>
                     </div>
-                  </AspectRatio>
+
+                    {/* Footer Verification Bar */}
+                    <div className="px-4 sm:px-6 py-3 bg-[#FFFFFF] border-t border-[#d8cab6] flex items-center justify-between gap-2 text-xs text-[#7c4226]">
+                      <span>Verified Merchant · Sabji Market, Fuljhore</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = activeQrSlide === 'upi' ? 'google' : 'upi';
+                          setActiveQrSlide(next);
+                          qrCarouselRef.current?.scrollTo(next === 'upi' ? 0 : 1);
+                        }}
+                        className="press-scale font-semibold text-[#a84222] hover:text-[#6c2b11] cursor-pointer"
+                      >
+                        {activeQrSlide === 'upi' ? 'Next: Google Review QR →' : '← Prev: UPI Payment QR'}
+                      </button>
+                    </div>
+                  </div>
                 </Card>
               </div>
 
@@ -1116,55 +1160,6 @@ Please confirm availability!`;
         onSubmitOrder={handleSubmitOrder}
         orderConfirmed={orderConfirmed}
       />
-
-      {/* Full-Clarity Counter QR ModalSheet (Google Pay / BHIM UPI & Google Business Profile) */}
-      <ModalSheet
-        isOpen={activeQrPreview !== null}
-        onClose={() => setActiveQrPreview(null)}
-        title={
-          activeQrPreview === 'upi'
-            ? 'Google Pay / BHIM UPI Counter QR'
-            : 'Google Business Profile & Review QR'
-        }
-        subtitle={
-          activeQrPreview === 'upi'
-            ? `Pay only after we confirm your final scale weight at the counter · UPI ID: ${siteData.upiId}`
-            : 'Scan to rate Bikash Chicken Shop on Google or open in Google Maps'
-        }
-      >
-        <div className="space-y-4 text-center">
-          <div className="p-4 rounded-[var(--radius-concentric-panel)] bg-[#FAF7F2] border border-[#d8cab6] inline-block mx-auto">
-            <img
-              src={activeQrPreview === 'upi' ? qrUpiUrl : qrGoogleUrl}
-              alt={
-                activeQrPreview === 'upi'
-                  ? 'Google Pay / BHIM UPI Counter Payment QR Standee'
-                  : 'Bikash Chicken Shop Google Review QR'
-              }
-              className="w-64 sm:w-72 h-auto rounded-[var(--radius-concentric-control)] object-contain mx-auto bg-[#FFFFFF] p-2 border border-[#d8cab6]"
-            />
-          </div>
-
-          {activeQrPreview === 'upi' ? (
-            <p className="text-xs text-[#7c4226] max-w-sm mx-auto leading-relaxed">
-              Verified Merchant: <strong className="text-[#111314]">Bikash Chicken Shop</strong> (
-              <code className="font-mono text-[#6c2b11]">{siteData.upiId}</code> · {siteData.phone}). Works with GPay, PhonePe, Paytm, and BHIM UPI.
-            </p>
-          ) : (
-            <div className="pt-1">
-              <a
-                href={siteData.googleProfileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="press-scale hover-lift inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--radius-control)] bg-[#FFFFFF] border border-[#d8cab6] hover:bg-[#f5ebd6]/70 text-xs font-semibold text-[#111314]"
-              >
-                <span>Open Google Business Profile</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#a84222]" />
-              </a>
-            </div>
-          )}
-        </div>
-      </ModalSheet>
     </div>
   );
 }

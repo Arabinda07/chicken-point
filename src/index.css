@@ -1,3 +1,4 @@
+@layer theme, base, reset, astryx-base, astryx-theme, components, utilities;
 @import "tailwindcss";
 
 @theme {
@@ -90,9 +91,21 @@
   --radius-concentric-panel: 0.75rem;
   --radius-concentric-control: 0.625rem;
 
+  /* Astryx Structural Radius & Border Alignment */
+  --border-width: 1px;
+  --radius-container: 1.5rem;
+  --radius-element: 0.75rem;
+  --radius-inner: 0.625rem;
+
   /* Subtle Warm Elevation (DESIGN.md) */
   --shadow-card: 0 4px 20px -4px rgba(17, 19, 20, 0.05), 0 2px 6px -2px rgba(17, 19, 20, 0.03);
   --shadow-bezel: 0 1px 2px rgba(17, 19, 20, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-low: var(--shadow-card);
+}
+
+::selection {
+  background-color: #ebd3a2;
+  color: #6c2b11;
 }
 
 @layer base {
@@ -334,6 +347,12 @@
 
 .cart-badge-bump[data-bumping="true"] {
   transform: scale(1.22);
+}
+
+/* Full-container slide sizing for Band 4 QR Standee Carousel */
+.qr-standee-carousel [aria-roledescription="slide"] {
+  width: 100%;
+  flex: 0 0 100%;
 }
 
 /* Hide scrollbars cleanly where needed */
