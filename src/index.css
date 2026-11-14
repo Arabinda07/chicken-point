@@ -6,55 +6,103 @@
   --font-mono: "JetBrains Mono", monospace;
   --font-bengali: "Noto Sans Bengali", sans-serif;
 
-  /* Wada Sanzo (Option A) Semantic Color Tokens */
-  --color-canvas: #FAF7F2;
-  --color-surface: #FFFFFF;
+  /* Sanzo Wada Palette Tokens (DESIGN.md) */
+  --color-canvas-cream: #FAF7F2;
+  --color-surface-white: #FFFFFF;
   --color-sandstone: #f5ebd6;
   --color-ivory-buff: #ebd3a2;
   --color-border-hairline: #d8cab6;
   --color-ecru: #c2ae93;
-  --color-crimson: #a84222;
-  --color-crimson-dark: #6c2b11;
-  --color-marigold: #e0b81f;
-  --color-espresso: #111314;
-  --color-muted: #7c4226;
+  --color-brick-red: #a84222;
+  --color-brown-deep: #6c2b11;
+  --color-yellow-ocher: #e0b81f;
+  --color-wada-black: #111314;
+  --color-brown-warm: #7c4226;
   --color-whatsapp: #15803D;
   --color-whatsapp-hover: #166534;
 
+  /* Storefront Semantic Color Tokens */
+  --color-canvas: var(--color-canvas-cream);
+  --color-surface: var(--color-surface-white);
+  --color-border: var(--color-border-hairline);
+  --color-text-primary: var(--color-wada-black);
+  --color-text-secondary: var(--color-brown-warm);
+  --color-brand: var(--color-brick-red);
+  --color-brand-hover: var(--color-brown-deep);
+  --color-highlight: var(--color-yellow-ocher);
+  --color-highlight-hover: #c9a318;
+
   /* Scale Tokens */
-  --scale-95: 0.95;
   --scale-97: 0.97;
-  --scale-975: 0.975;
-  --scale-98: 0.98;
 }
 
-:root {
-  /* Reflections Physical Easing */
+:root,
+[data-astryx-theme="stone"] {
+  color-scheme: light;
+
+  /* Astryx Design System Token Alignment with Sanzo Wada Palette */
+  --font-family-body: var(--font-sans);
+  --font-family-heading: var(--font-display);
+  --font-family-code: var(--font-mono);
+
+  --color-background-body: #FAF7F2;
+  --color-background-surface: #FFFFFF;
+  --color-background-card: #FFFFFF;
+  --color-background-popover: #FFFFFF;
+  --color-background-muted: #f5ebd6;
+  --color-background-inverted: #111314;
+
+  --color-text-primary: #111314;
+  --color-text-secondary: #7c4226;
+  --color-text-disabled: #c2ae93;
+  --color-text-accent: #a84222;
+
+  --color-accent: #a84222;
+  --color-accent-muted: rgba(168, 66, 34, 0.12);
+  --color-on-accent: #FFFFFF;
+  --color-neutral: rgba(124, 66, 38, 0.08);
+  --color-overlay: rgba(17, 19, 20, 0.45);
+  --color-overlay-hover: rgba(124, 66, 38, 0.06);
+  --color-overlay-pressed: rgba(124, 66, 38, 0.12);
+
+  --color-border: #d8cab6;
+  --color-border-emphasized: #c2ae93;
+  --color-skeleton: #ebd3a2;
+
+  --color-success: #15803D;
+  --color-success-muted: rgba(21, 128, 61, 0.12);
+  --color-text-success: #15803D;
+  --color-warning: #e0b81f;
+  --color-warning-muted: #f5ebd6;
+  --color-text-warning: #6c2b11;
+  --color-error: #a84222;
+  --color-error-muted: rgba(168, 66, 34, 0.12);
+  --color-text-error: #6c2b11;
+
+  /* Physical Easing */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* Reflections Concentric Radii */
-  --radius-chip: 0.75rem;     /* 12px */
-  --radius-control: 1rem;     /* 16px */
-  --radius-panel: 1.5rem;     /* 24px */
-  --radius-shell: 2rem;       /* 32px */
-  --radius-concentric-panel: max(0px, calc(var(--radius-panel) - 0.75rem));
-  --radius-concentric-control: max(0px, calc(var(--radius-control) - 0.375rem));
+  /* Concentric Radii */
+  --radius-chip: 0.75rem;      /* 12px */
+  --radius-control: 1rem;      /* 16px */
+  --radius-panel: 1.5rem;      /* 24px */
+  --radius-concentric-panel: 0.75rem;
+  --radius-concentric-control: 0.625rem;
 
-  /* Elevation & Shadows */
+  /* Subtle Warm Elevation (DESIGN.md) */
   --shadow-card: 0 4px 20px -4px rgba(17, 19, 20, 0.05), 0 2px 6px -2px rgba(17, 19, 20, 0.03);
-  --shadow-floating: 0 16px 36px -6px rgba(17, 19, 20, 0.12), 0 6px 14px -3px rgba(17, 19, 20, 0.06);
-
-  /* Background Ambient Wash */
-  --page-wash: radial-gradient(ellipse 85% 55% at 50% -5%, rgba(168, 66, 34, 0.06), transparent 75%), #FAF7F2;
+  --shadow-bezel: 0 1px 2px rgba(17, 19, 20, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
     font-family: var(--font-sans);
-    background: var(--page-wash);
-    color: var(--color-espresso);
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    accent-color: var(--color-brick-red);
+    caret-color: var(--color-brick-red);
   }
 
   h1, h2, h3, h4, .font-display {
@@ -72,21 +120,20 @@
   }
 }
 
-/* Reflections Surface Recipes */
+/* Clean Surface Recipes (DESIGN.md) */
 .surface-paper {
-  background: linear-gradient(145deg, #FFFFFF, #FAF7F2);
+  background: linear-gradient(145deg, #FFFFFF 0%, #FAF7F2 100%);
   border: 1px solid var(--color-border-hairline);
   border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .surface-bezel {
-  border: 1px solid var(--color-border-hairline);
-  box-shadow: 0 1px 2px rgba(17, 19, 20, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-bezel);
 }
 
 .control-surface {
-  background: #FFFFFF;
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border-hairline);
   border-radius: var(--radius-control);
   transition: border-color 180ms var(--ease-out-expo), background-color 180ms var(--ease-out-expo);
@@ -94,39 +141,9 @@
 
 @media (hover: hover) and (pointer: fine) {
   .control-surface:hover {
-    border-color: rgba(168, 66, 34, 0.4);
-    background: #FAF7F2;
+    border-color: var(--color-ecru);
+    background-color: var(--color-sandstone);
   }
-}
-
-.surface-floating {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(216, 202, 182, 0.9);
-  box-shadow: var(--shadow-floating);
-  border-radius: var(--radius-panel);
-}
-
-/* Micro-Interactions & Spring Motion */
-.ease-out-expo {
-  transition-timing-function: var(--ease-out-expo);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hover-lift {
-    transition: transform 180ms var(--ease-out-expo), box-shadow 180ms var(--ease-out-expo);
-  }
-  .hover-lift:hover {
-    transform: translateY(-1.5px);
-    box-shadow: var(--shadow-floating);
-  }
-}
-
-.active-press {
-  transition: transform 120ms var(--ease-out-expo);
-}
-.active-press:active {
-  transform: scale(0.975);
 }
 
 /* Mobile Bottom Sheet Grab Handle */
@@ -134,13 +151,22 @@
   width: 36px;
   height: 4px;
   border-radius: 9999px;
-  background-color: var(--color-border-hairline);
+  background-color: var(--color-ecru);
   margin-inline: auto;
   margin-bottom: 0.75rem;
-  transition: background-color 150ms var(--ease-out-expo);
 }
 
-/* Modal & Mobile Sheet Entrances */
+/* Modal & Mobile Sheet Entrances & Asymmetric Exits (emil-design-eng) */
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes sheet-up {
   from {
     opacity: 0;
@@ -149,6 +175,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes sheet-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
   }
 }
 
@@ -163,17 +200,143 @@
   }
 }
 
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes drawer-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes card-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-backdrop-in {
+  animation: backdrop-in 200ms var(--ease-out-expo) both;
+}
+
+.animate-backdrop-out {
+  animation: backdrop-out 160ms var(--ease-out-expo) both;
+}
+
 .animate-sheet-up {
   animation: sheet-up 240ms var(--ease-drawer) both;
+}
+
+.animate-sheet-down {
+  animation: sheet-down 170ms var(--ease-out-expo) both;
+}
+
+.animate-drawer-in {
+  animation: drawer-slide-in 260ms var(--ease-drawer) both;
+}
+
+.animate-drawer-out {
+  animation: drawer-slide-out 180ms var(--ease-out-expo) both;
+}
+
+.animate-card-enter {
+  animation: card-stagger-in 200ms var(--ease-out-expo) both;
 }
 
 @media (min-width: 640px) {
   .animate-sheet-up {
     animation: dialog-in 200ms var(--ease-out-expo) both;
   }
+  .animate-sheet-down {
+    animation: dialog-out 150ms var(--ease-out-expo) both;
+  }
 }
 
-/* Hide scrollbars cleanly on horizontal mobile tab rails */
+/* Tactile Press & Pointer-Fine Hover Lift Utilities */
+.press-scale {
+  transition:
+    transform 150ms var(--ease-out-expo),
+    background-color 150ms var(--ease-out-expo),
+    border-color 150ms var(--ease-out-expo),
+    color 150ms var(--ease-out-expo),
+    box-shadow 150ms var(--ease-out-expo);
+}
+
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift {
+    transition:
+      transform 180ms var(--ease-out-expo),
+      box-shadow 180ms var(--ease-out-expo),
+      border-color 180ms var(--ease-out-expo),
+      background-color 180ms var(--ease-out-expo);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -6px rgba(17, 19, 20, 0.1), 0 4px 10px -2px rgba(17, 19, 20, 0.05);
+  }
+  .hover-lift:active {
+    transform: translateY(0) scale(0.97);
+  }
+}
+
+/* Tabular Price Swap Blur/Transform Transition */
+.price-swap {
+  display: inline-block;
+  transition:
+    transform 160ms var(--ease-out-expo),
+    opacity 160ms var(--ease-out-expo),
+    filter 160ms var(--ease-out-expo);
+}
+
+.price-swap[data-swapping="true"] {
+  opacity: 0.72;
+  filter: blur(1.5px);
+  transform: translateY(-2px) scale(0.98);
+}
+
+/* Cart Badge Bump on + Add */
+.cart-badge-bump {
+  transition: transform 200ms var(--ease-out-expo), background-color 200ms var(--ease-out-expo);
+}
+
+.cart-badge-bump[data-bumping="true"] {
+  transform: scale(1.22);
+}
+
+/* Hide scrollbars cleanly where needed */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -182,39 +345,35 @@
   display: none;
 }
 
-/* Reduced Motion Compliance: suppress movement while preserving state-change color/opacity feedback */
+/* Reduced Motion Compliance (emil-design-eng: keep opacity/color, remove movement/scale) */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;
   }
-  *, ::before, ::after {
-    animation-duration: 150ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 150ms !important;
+  .animate-sheet-up,
+  .animate-drawer-in,
+  .animate-card-enter {
+    animation: backdrop-in 150ms ease both !important;
   }
+  .animate-sheet-down,
+  .animate-drawer-out {
+    animation: backdrop-out 120ms ease both !important;
+  }
+  .press-scale:active,
   .hover-lift:hover,
-  .active-press:active {
+  .hover-lift:active,
+  .cart-badge-bump[data-bumping="true"],
+  .price-swap[data-swapping="true"] {
     transform: none !important;
+    filter: none !important;
   }
 }
 
-/* Modern Web Guidance: Prevent page scroll under modal dialog */
-dialog:modal {
-  overscroll-behavior: contain;
-}
-
-dialog::backdrop {
-  overflow: hidden;
-  overscroll-behavior: contain;
-  background-color: rgba(17, 19, 20, 0.55);
-  backdrop-filter: blur(6px);
-}
-
-/* Modern Web Guidance: Validate input after user interaction */
+/* Validate input after user interaction */
 input:user-invalid,
 select:user-invalid,
 textarea:user-invalid {
-  border-color: var(--color-crimson) !important;
+  border-color: var(--color-brand) !important;
   background-color: #fef2f2 !important;
 }
 
@@ -222,28 +381,6 @@ input:user-valid,
 select:user-valid,
 textarea:user-valid {
   border-color: var(--color-whatsapp) !important;
-}
-
-.field:has(input:user-invalid) .error-msg,
-.field:has(select:user-invalid) .error-msg {
-  display: flex !important;
-}
-
-.error-msg {
-  display: none;
-}
-
-/* Modern Web Guidance: Size-aware styling with container queries */
-.product-grid-container {
-  container-type: inline-size;
-}
-
-@container (min-width: 520px) {
-  .product-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
 }
 
 /* Dynamic Viewport Unit helper */

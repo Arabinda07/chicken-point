@@ -1,12 +1,28 @@
 import type {CutStyle, Product} from './lib/supabase';
 
+export type ProductCategory =
+  | 'All Cuts'
+  | 'Curry Cuts'
+  | 'Boneless'
+  | 'Wings & Drumsticks'
+  | 'Specials';
+
+export const productCategories: ProductCategory[] = [
+  'All Cuts',
+  'Curry Cuts',
+  'Boneless',
+  'Wings & Drumsticks',
+  'Specials',
+];
+
 export const siteData = {
   shopName: 'Bikash Chicken Point',
   shopNameBengali: 'বিকাশ চিকেন পয়েন্ট',
   tagline: 'Fresh chicken cut after you pre-book',
   phone: '+91 96350 21694',
   whatsapp: '919635021694',
-  pickupNote: 'Walk-in pickup only from Fuljhore Sabji Market, Durgapur',
+  deliveryArea: 'Fuljhore, Durgapur',
+  pickupNote: 'Fresh daily dressing at Fuljhore Sabji Market, Durgapur',
   address: 'Sabji Market, Fuljhore, Durgapur-713206, West Bengal',
   timing: 'Open daily, 8:00 AM - 9:00 PM',
   udyamRegistrationNumber: 'UDYAM-I-WB-23-8437469',
@@ -17,71 +33,87 @@ export const siteData = {
   googleProfileUrl: 'https://share.google/B1iUixv7uA7BVarqb',
   mapEmbedUrl:
     'https://maps.google.com/maps?q=Sabji%20Market,%20Fuljhore,%20Durgapur-713206,%20West%20Bengal&t=&z=16&ie=UTF8&iwloc=&output=embed',
-  upiId: 'Q393575257@ybl',
+  upiId: '9635021694@okbizaxis',
   hero: {
-    eyebrow: 'আজকের তাজা কাট',
-    title: 'Pre-book fresh chicken. Pick up without waiting.',
+    eyebrow: 'আজকের তাজা কাট · Fresh Daily Cuts',
+    title: 'Fresh chicken, dressed and cut after you order.',
     subtitle:
-      'Choose weight and cut style before you leave home. We keep it ready for walk-in pickup at Fuljhore Sabji Market.',
+      "We dress and cut your chicken only after you book or walk in, never from freezer trays. Pick your cut and pack weight on WhatsApp, confirm today's rate, and pick up at Fuljhore Sabji Market.",
   },
   fastTrack: {
-    english: 'Online Pre-Bookings: Pick up in 2 mins.',
-    bengali: 'অনলাইন বুকিং: ২ মিনিটে পিকআপ',
+    english: 'WhatsApp Pre-Booking: Skip the counter wait.',
+    bengali: 'হোয়াটসঅ্যাপ বুকিং: কাউন্টারে অপেক্ষা ছাড়াই পিকআপ',
   },
   booking: {
-    title: 'Pre-Book for Pickup',
-    titleBengali: 'পিকআপের জন্য বুক করুন',
+    title: 'Your Order Cart',
+    titleBengali: 'আপনার অর্ডার কার্ট',
     invoiceLabel: 'Request GST/Formal Invoice',
     invoiceLabelBengali: 'GST / ফরমাল ইনভয়েস চাই',
   },
   b2b: {
-    eyebrow: 'For Restaurants/Hotels',
-    title: 'Bulk pickup with formal papers when you need them.',
+    eyebrow: 'Bulk & Party Orders',
+    title: 'Planning a family gathering, catering event, or hotel supply?',
     body:
-      'For hotels, roll counters, caterers, and small restaurants: pre-book your quantity, request a formal invoice, and pick up from the shop counter.',
+      'Order ahead for family functions, hostels, roll counters, or local hotels. We cut to your piece count for morning pickup and provide a GST or formal bill when needed.',
     bodyBengali:
-      'হোটেল, রোল কাউন্টার, ক্যাটারিং বা রেস্টুরেন্টের জন্য আগে থেকে পরিমাণ জানিয়ে রাখুন। দরকার হলে ফরমাল ইনভয়েস চাইতে পারেন।',
+      'হোটেল, রোল কাউন্টার, ক্যাটারিং বা পারিবারিক অনুষ্ঠানের জন্য আগে থেকে পরিমাণ জানিয়ে রাখুন। দরকার হলে ফরমাল ইনভয়েস পাবেন।',
   },
   menuDetails: {
     'curry-cut': {
-      detail: 'Bone-in pieces for daily home cooking.',
-      note: 'Most ordered',
-      weight: '0.5kg / 1kg',
+      category: 'Curry Cuts' as ProductCategory,
+      spec: 'Skinless · Bone-in · Medium',
+      detail: 'Skinless bone-in pieces cut evenly for everyday home chicken curry.',
+      badge: 'Most Popular',
+      weight: '500g / 1kg',
     },
     'whole-chicken': {
-      detail: 'Cleaned and cut to your preferred size.',
-      note: 'Family order',
-      weight: 'By bird weight',
+      category: 'Curry Cuts' as ProductCategory,
+      spec: 'Full Bird · Custom Cut',
+      detail: 'Full dressed bird cleaned and cut to the piece size you ask for.',
+      badge: undefined,
+      weight: '500g / 1kg',
     },
     'boneless-breast': {
-      detail: 'Lean pieces for snacks, curry, and meal prep.',
-      note: 'Lean cut',
-      weight: '0.5kg / 1kg',
+      category: 'Boneless' as ProductCategory,
+      spec: '100% Boneless · Lean Cubes',
+      detail: 'Clean, fat-trimmed boneless breast pieces for chili chicken, tikka, or pan-fry.',
+      badge: 'Lean Cubes',
+      weight: '500g / 1kg',
     },
     drumsticks: {
-      detail: 'Good for fry, roast, and biryani prep.',
-      note: 'Party favorite',
-      weight: '0.5kg / 1kg',
+      category: 'Wings & Drumsticks' as ProductCategory,
+      spec: 'Whole Drumsticks · Skinless',
+      detail: 'Whole chicken drumsticks cleaned for tandoori roast, fry, or home biryani.',
+      badge: undefined,
+      weight: '500g / 1kg',
     },
     'leg-pieces': {
-      detail: 'Juicy bone-in pieces for richer curries.',
-      note: 'Call to confirm',
-      weight: '0.5kg / 1kg',
+      category: 'Wings & Drumsticks' as ProductCategory,
+      spec: 'Whole Leg · Biryani Size',
+      detail: 'Large leg and thigh pieces cut for biryani, rezala, and kosha.',
+      badge: 'Biryani Cut',
+      weight: '500g / 1kg',
     },
     keema: {
-      detail: 'Fresh mince for rolls, paratha, and cutlets.',
-      note: 'Fresh ground',
-      weight: '0.5kg / 1kg',
+      category: 'Boneless' as ProductCategory,
+      spec: 'Hand-Minced · Zero Bone',
+      detail: 'Boneless chicken minced fresh on the block for kebabs, tadka, and stuffed parathas.',
+      badge: undefined,
+      weight: '500g / 1kg',
     },
     'liver-gizzard': {
-      detail: 'Availability changes through the day.',
-      note: 'Ask first',
-      weight: 'As available',
+      category: 'Specials' as ProductCategory,
+      spec: 'Cleaned · Membrane-Trimmed',
+      detail: 'Fresh liver and gizzard pack, washed clean and membrane-trimmed.',
+      badge: undefined,
+      weight: '500g / 1kg',
     },
     'bulk-party': {
-      detail: 'Tell us the date, quantity, and cut style.',
-      note: '24h notice helps',
-      weight: 'Custom quantity',
+      category: 'Specials' as ProductCategory,
+      spec: 'Event Pack · Custom Cut',
+      detail: 'Larger orders cut to size for family functions, hostels, and local eateries.',
+      badge: undefined,
+      weight: '500g / 1kg',
     },
   },
   orderSteps: [
@@ -126,7 +158,7 @@ export const siteData = {
       question: 'Can I choose the cut style?',
       questionBengali: 'আমি কি কাটের ধরন বেছে নিতে পারি?',
       answer:
-        'Yes. Choose curry, biryani, or fry cut while pre-booking.',
+        'Yes. Choose curry, biryani, or fry cut while ordering.',
       answerBengali:
         'হ্যাঁ। বুক করার সময় কারি, বিরিয়ানি বা ফ্রাই কাট বেছে নিতে পারবেন।',
     },
@@ -136,7 +168,7 @@ export const siteData = {
       question: 'When should I pay?',
       questionBengali: 'কখন পেমেন্ট করব?',
       answer:
-        'Please pay only after we confirm your order number, weight, and final amount at the shop.',
+        'Please pay only after we confirm your order number, weight, and final amount.',
       answerBengali:
         'দোকানে অর্ডার নম্বর, ওজন আর ফাইনাল টাকা নিশ্চিত করার পরেই পেমেন্ট করুন।',
     },
@@ -146,9 +178,9 @@ export const siteData = {
       question: 'Do you take hotel or restaurant orders?',
       questionBengali: 'হোটেল বা রেস্টুরেন্টের অর্ডার নেন?',
       answer:
-        'Yes. Use pre-booking for normal quantities. For bigger orders, call ahead and request a formal invoice if needed.',
+        'Yes. Use the cart for normal quantities. For bigger orders, call ahead and request a formal invoice if needed.',
       answerBengali:
-        'হ্যাঁ। সাধারণ পরিমাণের জন্য প্রি-বুক করুন। বড় অর্ডারের জন্য আগে কল করুন, দরকার হলে ফরমাল ইনভয়েস চাইতে পারেন।',
+        'হ্যাঁ। সাধারণ পরিমাণের জন্য বুক করুন। বড় অর্ডারের জন্য আগে কল করুন, দরকার হলে ফরমাল ইনভয়েস চাইতে পারেন।',
     },
   ],
 };
@@ -156,7 +188,7 @@ export const siteData = {
 export const fallbackProducts: Product[] = [
   {
     id: 'curry-cut',
-    name: 'Curry cut',
+    name: 'Curry Cut',
     name_bengali: 'কারি কাট',
     price_per_kg: 220,
     is_available: true,
@@ -164,7 +196,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: 'whole-chicken',
-    name: 'Whole chicken cut',
+    name: 'Whole Chicken Cut',
     name_bengali: 'পুরো চিকেন কাট',
     price_per_kg: 210,
     is_available: true,
@@ -172,7 +204,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: 'boneless-breast',
-    name: 'Boneless breast',
+    name: 'Boneless Breast',
     name_bengali: 'বোনলেস ব্রেস্ট',
     price_per_kg: 360,
     is_available: true,
@@ -188,7 +220,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: 'leg-pieces',
-    name: 'Leg pieces',
+    name: 'Leg & Thigh Pieces',
     name_bengali: 'থাই ও লেগ',
     price_per_kg: 280,
     is_available: true,
@@ -196,7 +228,7 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: 'keema',
-    name: 'Chicken keema',
+    name: 'Chicken Keema',
     name_bengali: 'চিকেন কিমা',
     price_per_kg: 320,
     is_available: true,
@@ -204,16 +236,16 @@ export const fallbackProducts: Product[] = [
   },
   {
     id: 'liver-gizzard',
-    name: 'Liver & gizzard',
+    name: 'Liver & Gizzard',
     name_bengali: 'লিভার ও গিজার্ড',
     price_per_kg: 180,
-    is_available: false,
+    is_available: true,
     display_order: 70,
   },
   {
     id: 'bulk-party',
-    name: 'Bulk / party order',
-    name_bengali: 'বড় অর্ডার',
+    name: 'Bulk / Party Pack',
+    name_bengali: 'বড় অর্ডার প্যাক',
     price_per_kg: 210,
     is_available: true,
     display_order: 80,

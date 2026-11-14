@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'paper' | 'bezel' | 'floating' | 'flat';
+  variant?: 'paper' | 'flat';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }
@@ -13,31 +13,21 @@ export const Surface: React.FC<SurfaceProps> = ({
   className = '',
   ...props
 }) => {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'paper':
-        return 'surface-paper';
-      case 'bezel':
-        return 'surface-bezel bg-white rounded-[var(--radius-panel)]';
-      case 'floating':
-        return 'surface-floating';
-      case 'flat':
-        return 'bg-white border border-[var(--color-border-hairline)] rounded-[var(--radius-panel)]';
-      default:
-        return 'surface-paper';
-    }
-  };
+  const variantStyles =
+    variant === 'flat'
+      ? 'bg-[#FFFFFF] border border-[#d8cab6] rounded-[var(--radius-panel)] surface-bezel'
+      : 'surface-paper';
 
   const paddingClasses: Record<NonNullable<SurfaceProps['padding']>, string> = {
     none: '',
-    sm: 'p-3',
-    md: 'p-4 sm:p-5',
-    lg: 'p-5 sm:p-6',
+    sm: 'p-4',
+    md: 'p-5 sm:p-6',
+    lg: 'p-6 sm:p-8',
   };
 
   return (
     <div
-      className={`${getVariantStyles()} ${paddingClasses[padding]} ${className}`.trim()}
+      className={`${variantStyles} ${paddingClasses[padding]} ${className}`.trim()}
       {...props}
     >
       {children}

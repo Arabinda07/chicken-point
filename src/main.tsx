@@ -6,7 +6,7 @@ import App from './App.tsx';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
-  <LayerProvider toast={{ position: 'bottomEnd', maxVisible: 3 }}>
+  <LayerProvider toast={{ position: 'bottomStart', maxVisible: 2 }}>
     <App />
   </LayerProvider>
 );

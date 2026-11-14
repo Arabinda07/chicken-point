@@ -38,7 +38,7 @@ export const FieldInput = React.forwardRef<HTMLInputElement, FieldInputProps>(
           className={
             isLabelHidden
               ? 'visually-hidden'
-              : 'block text-xs font-bold text-[#111314]'
+              : 'block text-xs font-semibold text-[#111314]'
           }
         >
           {label}
@@ -73,7 +73,7 @@ export const FieldInput = React.forwardRef<HTMLInputElement, FieldInputProps>(
             onChange={(e) => onChange(e.target.value)}
             className={`w-full min-h-[44px] ${
               icon ? 'pl-10 pr-3.5' : 'px-3.5'
-            } py-2.5 text-base sm:text-sm text-[#111314] placeholder:text-[#7c4226]/70 rounded-[var(--radius-control)] border border-[#d8cab6] bg-[#FAF7F2] focus:bg-white focus:border-[#a84222] focus:ring-2 focus:ring-[#a84222]/25 outline-none transition-[border-color,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] ${className}`.trim()}
+            } py-2.5 text-base sm:text-sm text-[#111314] placeholder:text-[#7c4226]/60 rounded-[var(--radius-control)] border border-[#d8cab6] bg-[#FAF7F2] focus:bg-[#FFFFFF] focus:border-[#a84222] focus:ring-2 focus:ring-[#a84222]/20 outline-none transition-[border-color,background-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] ${className}`.trim()}
             {...props}
           />
         </div>

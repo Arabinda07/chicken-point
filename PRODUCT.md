@@ -24,7 +24,7 @@ A real neighborhood butcher counter with clear order steps and honest local trus
 
 - Primary usage is on mobile phones while customers are at home, at the market, or planning a meal.
 - Counter hours: 8 AM – 9 PM (`Asia/Kolkata`), Fuljhore Sabji Market, Durgapur-713206, West Bengal.
-- Orders are coordinated via phone call or WhatsApp pre-booking summary; payment is settled at the counter via PhonePe/UPI or cash after weighing.
+- Orders are coordinated via phone call or WhatsApp pre-booking summary; payment is settled at the counter via Google Pay/PhonePe/UPI or cash after weighing.
 
 ## Capabilities and Constraints
 
@@ -42,9 +42,9 @@ A real neighborhood butcher counter with clear order steps and honest local trus
 
 - Real shop assets in `assets/`:
   - Shop logo: `assets/logo.jpeg`
-  - PhonePe UPI payment QR: `assets/QR1.png`
-  - Google Business Profile QR/poster: `assets/Shop_GoogleQR.png`
-- Registered Udyam MSME number and verified PhonePe UPI ID in `src/data.ts`.
+  - Google Pay / BHIM UPI payment QR (`9635021694@okbizaxis`): `assets/QR1.png`
+  - Google Business Profile review QR (`Bikash Chicken Shop, Durgapur`): `assets/Shop_GoogleQR.png`
+- Registered Udyam MSME number and verified UPI ID (`9635021694@okbizaxis`) in `src/data.ts`.
 - **Absences not to fabricate:** No invented customer testimonials, star ratings, or unverified quality certifications.
 
 ## Product Principles
