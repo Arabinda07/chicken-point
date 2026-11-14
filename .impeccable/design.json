@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T14:23:00+05:30",
+  "title": "Design System: Bikash Chicken Point",
+  "extensions": {
+    "colorMeta": {
+      "brick-red": {
+        "role": "primary",
+        "displayName": "Brick Red (Wada)",
+        "canonical": "#a84222",
+        "tonalRamp": ["#3B150A", "#57200F", "#732C16", "#8F371C", "#a84222", "#C7684A", "#E3A794", "#F9ECE8"]
+      },
+      "brown-deep": {
+        "role": "primary",
+        "displayName": "Deep Brown (Wada)",
+        "canonical": "#6c2b11",
+        "tonalRamp": ["#260E05", "#3D1809", "#54210D", "#6c2b11", "#8C3F21", "#B06547", "#D69E87", "#F7EBE6"]
+      },
+      "yellow-ocher": {
+        "role": "secondary",
+        "displayName": "Yellow Ocher (Wada)",
+        "canonical": "#e0b81f",
+        "tonalRamp": ["#453806", "#66530A", "#8C720E", "#B59415", "#e0b81f", "#E8CB58", "#F2E099", "#FCF7E3"]
+      },
+      "whatsapp-green": {
+        "role": "secondary",
+        "displayName": "WhatsApp Green",
+        "canonical": "#15803D",
+        "tonalRamp": ["#072B14", "#0C4521", "#105E2D", "#15803D", "#229E50", "#55BA7B", "#9AD9B1", "#EBF7EF"]
+      },
+      "ivory-buff": {
+        "role": "neutral",
+        "displayName": "Ivory Buff (Wada)",
+        "canonical": "#ebd3a2",
+        "tonalRamp": ["#362C19", "#544528", "#756139", "#99804D", "#C2A66E", "#ebd3a2", "#F5E7CA", "#FCF7ED"]
+      },
+      "ecru": {
+        "role": "neutral",
+        "displayName": "Ecru (Wada)",
+        "canonical": "#c2ae93",
+        "tonalRamp": ["#29241C", "#423A2E", "#5E5242", "#7D6E59", "#9E8D74", "#c2ae93", "#DED3C3", "#F5F1EB"]
+      },
+      "border-hairline": {
+        "role": "neutral",
+        "displayName": "Parchment Hairline",
+        "canonical": "#d8cab6",
+        "tonalRamp": ["#29241D", "#453D32", "#635849", "#857764", "#AB9B86", "#d8cab6", "#EAE2D5", "#F7F4EF"]
+      },
+      "canvas-cream": {
+        "role": "neutral",
+        "displayName": "Cream Paper",
+        "canonical": "#FAF7F2",
+        "tonalRamp": ["#29241D", "#474036", "#695F52", "#8C8071", "#B0A495", "#D4C9BC", "#EFE8DE", "#FAF7F2"]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Counter White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#111314", "#383B3D", "#5E6266", "#878B8F", "#B2B5B8", "#D6D8DB", "#F0F1F2", "#FFFFFF"]
+      },
+      "wada-black": {
+        "role": "neutral",
+        "displayName": "Wada Black",
+        "canonical": "#111314",
+        "tonalRamp": ["#08090A", "#111314", "#2B2F31", "#474D50", "#666D70", "#8B9296", "#B8BEC2", "#E6E8EA"]
+      },
+      "brown-warm": {
+        "role": "neutral",
+        "displayName": "Warm Brown (Wada)",
+        "canonical": "#7c4226",
+        "tonalRamp": ["#29150B", "#422212", "#5E311B", "#7c4226", "#9C5B3C", "#BF8163", "#DEB39E", "#F7ECE6"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline and primary page titles." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings across storefront and dashboard." },
+      "title": { "displayName": "Title", "purpose": "Card headings, order steps, and KPI titles." },
+      "body": { "displayName": "Body", "purpose": "Descriptions, FAQs, and form helper copy." },
+      "label": { "displayName": "Label / Mono", "purpose": "Tabular prices, weights, and Bank UTR references." }
+    },
+    "shadows": [
+      {
+        "name": "card-resting",
+        "value": "0 4px 20px -4px rgba(17, 19, 20, 0.05), 0 2px 6px -2px rgba(17, 19, 20, 0.03)",
+        "purpose": "Default elevation for paper cards and containers."
+      },
+      {
+        "name": "floating",
+        "value": "0 16px 36px -6px rgba(17, 19, 20, 0.12), 0 6px 14px -3px rgba(17, 19, 20, 0.06)",
+        "purpose": "Elevated modals, floating bars, and pointer-fine hover lift."
+      },
+      {
+        "name": "bezel-inset",
+        "value": "0 1px 2px rgba(17, 19, 20, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
+        "purpose": "Top highlight bezel on raised white controls."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Primary physical easing curve for buttons, chips, and card presses."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Brick Red)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main storefront and modal action button.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\"><span>Pre-Book</span><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border-radius: 1rem; border: 1px solid rgba(168, 66, 34, 0.2); background: #a84222; color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17, 19, 20, 0.05); transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: #6c2b11; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17, 19, 20, 0.12); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(168, 66, 34, 0.45); outline-offset: 2px; }"
+    },
+    {
+      "name": "Gold Hero Button (Yellow Ocher)",
+      "kind": "button",
+      "refersTo": "button-gold",
+      "description": "High-contrast Yellow Ocher CTA with Wada Black ink.",
+      "html": "<button class=\"ds-btn-gold\" type=\"button\">Pre-Book for Pickup</button>",
+      "css": ".ds-btn-gold { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border-radius: 1rem; border: 1px solid rgba(108, 43, 17, 0.15); background: #e0b81f; color: #111314; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 700; cursor: pointer; box-shadow: 0 1px 2px rgba(17, 19, 20, 0.08); transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-gold:hover { background: #c9a318; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17, 19, 20, 0.14); } .ds-btn-gold:active { transform: scale(0.97); } .ds-btn-gold:focus-visible { outline: 2px solid rgba(168, 66, 34, 0.45); outline-offset: 2px; }"
+    },
+    {
+      "name": "WhatsApp Action Button",
+      "kind": "button",
+      "refersTo": "button-whatsapp",
+      "description": "Reserved for WhatsApp order submission and rate inquiry.",
+      "html": "<button class=\"ds-btn-whatsapp\" type=\"button\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg><span>Send Pre-Booking via WhatsApp</span></button>",
+      "css": ".ds-btn-whatsapp { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border-radius: 1rem; border: 1px solid rgba(21, 128, 61, 0.2); background: #15803D; color: #FFFFFF; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(17, 19, 20, 0.05); transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-whatsapp:hover { background: #166534; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(21, 128, 61, 0.2); } .ds-btn-whatsapp:active { transform: scale(0.97); } .ds-btn-whatsapp:focus-visible { outline: 2px solid rgba(21, 128, 61, 0.45); outline-offset: 2px; }"
+    },
+    {
+      "name": "Selection Chip",
+      "kind": "chip",
+      "refersTo": "chip-default",
+      "description": "Cut style, weight, pickup time, and filter selector chip.",
+      "html": "<div style=\"display:flex;gap:8px;\"><button class=\"ds-chip\" type=\"button\" aria-pressed=\"false\">500g</button><button class=\"ds-chip ds-chip-active\" type=\"button\" aria-pressed=\"true\">1 kg</button></div>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 0.75rem; border: 1px solid #d8cab6; background: #FAF7F2; color: #7c4226; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), border-color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-chip:hover { background: #f5ebd6; color: #111314; border-color: #c2ae93; transform: translateY(-2px); } .ds-chip:active { transform: scale(0.97); } .ds-chip:focus-visible { outline: 2px solid rgba(168, 66, 34, 0.35); outline-offset: 1px; } .ds-chip-active { background: rgba(168, 66, 34, 0.1); border-color: #a84222; color: #6c2b11; font-weight: 700; }"
+    },
+    {
+      "name": "Paper Surface Card",
+      "kind": "card",
+      "refersTo": "card-paper",
+      "description": "Warm white-to-cream layered card for menu cuts and dashboard panels.",
+      "html": "<div class=\"ds-card-paper\"><div class=\"ds-card-title\">Curry Cut Chicken</div><div class=\"ds-card-rate\">&#8377;220<span>/kg</span></div></div>",
+      "css": ".ds-card-paper { padding: 16px; border-radius: 1.5rem; border: 1px solid #d8cab6; background: linear-gradient(145deg, #FFFFFF, #FAF7F2); color: #111314; box-shadow: 0 4px 20px -4px rgba(17, 19, 20, 0.05), 0 2px 6px -2px rgba(17, 19, 20, 0.03); font-family: 'Plus Jakarta Sans', sans-serif; } .ds-card-title { font-family: 'Bricolage Grotesque', Georgia, serif; font-weight: 700; font-size: 1rem; margin-bottom: 8px; } .ds-card-rate { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.125rem; color: #6c2b11; font-variant-numeric: tabular-nums; } .ds-card-rate span { font-size: 0.75rem; font-weight: 400; color: #7c4226; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Neighborhood Counter",
+    "overview": "Bikash Chicken Point is designed to feel like a clean, dependable local butcher counter on warm cream paper—direct, readable, and built for quick mobile decisions at home or in the market. Its color system draws from Sanzo Wada's A Dictionary of Color Combinations (wada-sanzo-colors.com), pairing earthy Brick Red, Deep Brown, Yellow Ocher, Ivory Buff, and Ecru over sunlit parchment surfaces.\n\nThe visual hierarchy prioritizes fast scanning: shop identity, live counter status, phone/WhatsApp actions, and cut availability come first, followed by clear step-by-step pre-booking and counter QR tools. Tactile press feedback (scale(0.97)), custom exponential easing, and concentric corner radii give every interactive control a grounded, physical feel.",
+    "keyCharacteristics": [
+      "Warm cream paper canvas with an ambient Brick Red top wash and crisp 1px Ecru-derived borders",
+      "High-contrast Wada Black and Warm Brown ink for effortless mobile daylight readability",
+      "Sturdy geometric display headings paired with humanist body copy, tabular monospace rates, and light Bengali accents",
+      "Tactile, grounded controls with subtle press-down feedback and mathematical concentric corner geometry"
+    ],
+    "rules": [
+      {
+        "name": "The WhatsApp Green Rule",
+        "body": "Reserve whatsapp-green strictly for WhatsApp links/buttons, UPI verification cues, and live open-counter status—never use it as a generic brand accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wada Warmth Rule",
+        "body": "Keep all neutrals in the Wada Sanzo warm paper-to-brown-black family (canvas-cream, ivory-buff, ecru, brown-warm, wada-black); never introduce cold slate grays.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Price Rule",
+        "body": "Always apply tabular-nums and the monospace stack to counter rates, weights, and rupee totals so numbers align cleanly across cards and ledgers.",
+        "section": "typography"
+      },
+      {
+        "name": "The Grounded Card Rule",
+        "body": "Reserve hover-lift elevation exclusively for genuinely clickable surfaces; static KPI and product summary cards remain flatly grounded at rest.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Concentric Nesting Rule",
+        "body": "Any inner container nested inside a padded panel or control must step down its border radius (outer radius - padding) using --radius-concentric-panel or --radius-concentric-control rather than repeating the outer radius.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do use Button, Chip, Surface, and ModalSheet primitives instead of ad-hoc <button> or <div> styles.",
+      "Do gate hover transforms behind @media (hover: hover) and (pointer: fine) and pair pressable controls with active:scale-97 and --ease-out-expo.",
+      "Do use tabular-nums and monospace styling for all prices (₹/kg), weights, and PhonePe UTRs.",
+      "Do step down nested border radii using --radius-concentric-panel and --radius-concentric-control."
+    ],
+    "donts": [
+      "Don't use transition: all; always specify exact composited/color properties (transform, background-color, border-color, box-shadow).",
+      "Don't apply hover-lift to non-clickable KPI or product summary cards.",
+      "Don't use whatsapp-green for non-WhatsApp / non-open-status decoration.",
+      "Don't use font-size < 16px on mobile <select> or <input> controls where iOS Safari auto-zoom can trigger."
+    ]
+  }
+}

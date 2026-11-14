@@ -28,7 +28,7 @@ export const ModalSheet: React.FC<ModalSheetProps> = ({
       width={560}
       maxHeight="88dvh"
       padding={0}
-      className={`rounded-t-[var(--radius-panel)] sm:rounded-[var(--radius-panel)] bg-white text-[#231917] border border-[#E6DEC8] shadow-2xl overflow-hidden ${className}`.trim()}
+      className={`rounded-t-[var(--radius-panel)] sm:rounded-[var(--radius-panel)] bg-white text-[#111314] border border-[#d8cab6] shadow-2xl overflow-hidden ${className}`.trim()}
     >
       <div className="flex flex-col max-h-[88dvh]">
         {/* Mobile Grab Handle Bar */}
@@ -42,7 +42,7 @@ export const ModalSheet: React.FC<ModalSheetProps> = ({
           onOpenChange={(open) => {
             if (!open) onClose();
           }}
-          className="px-5 py-4 sm:px-6 sm:py-5 border-b border-[#E6DEC8] bg-[#FAF7F2]/80"
+          className="px-5 py-4 sm:px-6 sm:py-5 border-b border-[#d8cab6] bg-[#FAF7F2]/80"
         />
 
         <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1">

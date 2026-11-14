@@ -20,7 +20,7 @@ export const Surface: React.FC<SurfaceProps> = ({
       case 'floating':
         return 'surface-floating';
       case 'flat':
-        return 'bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]';
+        return 'bg-white border border-[var(--color-border-hairline)] rounded-[var(--radius-panel)]';
       default:
         return 'surface-paper';
     }

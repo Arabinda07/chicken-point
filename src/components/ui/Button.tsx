@@ -18,7 +18,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const baseStyles =
-    "relative inline-flex items-center justify-center gap-2 font-semibold select-none cursor-pointer transition-all duration-150 ease-out-expo focus:outline-none disabled:pointer-events-none disabled:opacity-50 [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 active:scale-97";
+    "relative inline-flex items-center justify-center gap-2 font-semibold select-none cursor-pointer transition-[transform,background-color,border-color,box-shadow] duration-150 ease-[var(--ease-out-expo)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 active:scale-97";
 
   const sizeClasses = {
     sm: "px-3 py-1.5 min-h-[38px] text-xs rounded-[var(--radius-chip)]",
@@ -32,29 +32,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
         return "bg-[#15803D] hover:bg-[#166534] text-white shadow-sm hover:shadow-md border border-[#15803D]/20";
       }
       if (tone === 'gold') {
-        return "bg-[#D99B26] hover:bg-[#B8811A] text-white shadow-sm hover:shadow-md border border-[#D99B26]/20";
+        return "bg-[#e0b81f] hover:bg-[#c9a318] text-[#111314] font-bold shadow-sm hover:shadow-md border border-[#6c2b11]/15";
       }
-      // default crimson
-      return "bg-[#A83A2F] hover:bg-[#872B22] text-white shadow-sm hover:shadow-md border border-[#A83A2F]/20";
+      // default Wada Brick Red -> Deep Brown
+      return "bg-[#a84222] hover:bg-[#6c2b11] text-white shadow-sm hover:shadow-md border border-[#a84222]/20";
     }
 
     if (variant === 'secondary') {
-      return "control-surface text-[#231917] hover:border-[#A83A2F]/40 shadow-xs";
+      return "control-surface text-[#111314] hover:border-[#a84222]/40 shadow-xs";
     }
 
     if (variant === 'outline') {
       if (tone === 'whatsapp') {
         return "bg-transparent border border-[#15803D]/40 text-[#15803D] hover:bg-[#15803D]/10";
       }
-      return "bg-transparent border border-[#E6DEC8] text-[#665852] hover:border-[#A83A2F]/40 hover:text-[#A83A2F] hover:bg-[#FAF7F2]";
+      return "bg-transparent border border-[#d8cab6] text-[#7c4226] hover:border-[#a84222]/40 hover:text-[#a84222] hover:bg-[#FAF7F2]";
     }
 
     if (variant === 'ghost') {
-      return "bg-transparent text-[#665852] hover:text-[#231917] hover:bg-[#FAF7F2]";
+      return "bg-transparent text-[#7c4226] hover:text-[#111314] hover:bg-[#f5ebd6]/60";
     }
 
     if (variant === 'bezel') {
-      return "surface-bezel bg-white text-[#231917] hover:bg-[#FAF7F2]";
+      return "surface-bezel bg-white text-[#111314] hover:bg-[#FAF7F2]";
     }
 
     return "";

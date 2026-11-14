@@ -53,6 +53,7 @@ import {
   useToast,
 } from '@astryxdesign/core';
 import { Button } from './ui/Button';
+import { Chip } from './ui/Chip';
 
 interface EarningsDashboardProps {
   onBackToShop: () => void;
@@ -283,16 +284,16 @@ export function EarningsDashboard({
   }
 
   return (
-    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#231917]">
+    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#111314]">
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E6DEC8] transition-shadow">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#d8cab6] transition-shadow">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display font-extrabold text-lg sm:text-xl text-[#872B22]">
+              <h1 className="font-display font-extrabold text-lg sm:text-xl text-[#6c2b11]">
                 Bikash Chicken Point
               </h1>
-              <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#A83A2F]/10 text-[#A83A2F]">
+              <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#a84222]/10 text-[#a84222]">
                 বিকাশ চিকেন পয়েন্ট
               </span>
               <Badge
@@ -301,54 +302,61 @@ export function EarningsDashboard({
                 label="PhonePe Statements"
               />
             </div>
-            <p className="text-xs text-[#665852] mt-0.5">
+            <p className="text-xs text-[#7c4226] mt-0.5">
               Executive Recap & Customer Intelligence Hub · Fuljhore Sabji Market, Durgapur
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              tone="crimson"
+              size="sm"
               onClick={() => setIsUploadModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-control)] bg-[#872B22] text-white hover:bg-[#A83A2F] transition-all hover-lift active-press cursor-pointer shadow-xs"
               title="Upload downloaded statement CSV from PhonePe Business portal"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Upload CSV</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="primary"
+              tone="whatsapp"
+              size="sm"
               onClick={shareWhatsAppRecap}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-control)] bg-[#15803D] text-white hover:bg-[#166534] transition-all hover-lift active-press cursor-pointer shadow-xs"
               title="Send formatted weekly summary to Uncle via WhatsApp"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>WhatsApp Recap</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={onBackToShop}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-[#231917] transition-all hover-lift active-press cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Shop</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onSignOut}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-[var(--radius-chip)] text-[#665852] hover:text-[#872B22] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
               title="Sign Out"
+              aria-label="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Navigation Tabs using Meta Astryx TabList & Tab */}
-        <div className="max-w-6xl mx-auto px-4 border-t border-[#E6DEC8]/60">
+        <div className="max-w-6xl mx-auto px-4 border-t border-[#d8cab6]/70">
           <TabList
             value={activeTab}
             onChange={(val) => onSwitchTab?.(val as 'dashboard' | 'rates' | 'bookings')}
@@ -358,41 +366,45 @@ export function EarningsDashboard({
             <Tab
               value="dashboard"
               label="Recap & Best Customers (সেরা খরিদ্দার)"
-              icon={<Award className="w-3.5 h-3.5 text-[#872B22]" />}
+              icon={<Award className="w-3.5 h-3.5 text-[#6c2b11]" />}
             />
-            <Tab
-              value="rates"
-              label="Counter Rates (রেট পরিবর্তন)"
-              icon={<Layers className="w-3.5 h-3.5 text-[#872B22]" />}
-            />
-            <Tab
-              value="bookings"
-              label="Pending Orders (বুকিং তালিকা)"
-              icon={<Clock className="w-3.5 h-3.5 text-[#872B22]" />}
-            />
+            {onSwitchTab && (
+              <>
+                <Tab
+                  value="rates"
+                  label="Counter Rates (রেট পরিবর্তন)"
+                  icon={<Layers className="w-3.5 h-3.5 text-[#6c2b11]" />}
+                />
+                <Tab
+                  value="bookings"
+                  label="Pending Orders (বুকিং তালিকা)"
+                  icon={<Clock className="w-3.5 h-3.5 text-[#6c2b11]" />}
+                />
+              </>
+            )}
           </TabList>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
-        {/* Executive KPI Cards Grid using Meta Astryx Card */}
+        {/* Executive KPI Cards Grid (Grounded static summary cards) */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total UPI Revenue */}
           <Card
             variant="default"
             elevation="low"
             padding={4}
-            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <span className="text-[11px] font-bold text-purple-800 uppercase tracking-wider block">
                   PhonePe UPI
                 </span>
-                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   মোট UPI বিক্রি
-                </h2>
+                </h3>
               </div>
               <div className="p-2 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
                 <QrCode className="w-4 h-4" />
@@ -400,12 +412,12 @@ export function EarningsDashboard({
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#872B22] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#6c2b11] tabular-nums">
                 ₹{recapMetrics.total_revenue.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
               <span>{recapMetrics.total_orders} verified payments</span>
               <Badge variant="purple" label="Direct to Bank" />
             </div>
@@ -416,29 +428,29 @@ export function EarningsDashboard({
             variant="default"
             elevation="low"
             padding={4}
-            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-[#6c2b11] uppercase tracking-wider block">
                   Customer Loyalty
                 </span>
-                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   নিয়মিত খরিদ্দার হার
-                </h2>
+                </h3>
               </div>
-              <div className="p-2 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              <div className="p-2 rounded-full bg-[#ebd3a2]/40 text-[#6c2b11] border border-[#e0b81f]/50">
                 <Users className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#231917] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#111314] tabular-nums">
                 {recapMetrics.repeat_customer_rate}%
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
               <span>{bestCustomers.filter((c) => c.total_visits > 1).length} repeat weekly buyers</span>
               <Badge variant="success" label="High Repeat" />
             </div>
@@ -449,29 +461,29 @@ export function EarningsDashboard({
             variant="default"
             elevation="low"
             padding={4}
-            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider block">
                   Sunday Peak Rush
                 </span>
-                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   রবিবারের বিক্রি
-                </h2>
+                </h3>
               </div>
-              <div className="p-2 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+              <div className="p-2 rounded-full bg-[#a84222]/10 text-[#a84222] border border-[#a84222]/25">
                 <Flame className="w-4 h-4" />
               </div>
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#872B22] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#6c2b11] tabular-nums">
                 ₹{recapMetrics.sunday_revenue.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
               <span>{recapMetrics.sunday_orders} morning rush orders</span>
               <Badge variant="error" label="Biggest Rush" />
             </div>
@@ -482,16 +494,16 @@ export function EarningsDashboard({
             variant="default"
             elevation="low"
             padding={4}
-            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+            className="flex flex-col justify-between bg-white border border-[#d8cab6] rounded-[var(--radius-panel)]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <span className="text-[11px] font-bold text-sky-700 uppercase tracking-wider block">
                   Average Ticket Size
                 </span>
-                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                <h3 className="font-display font-bold text-sm text-[#111314] mt-0.5">
                   গড় কেনাকাটা
-                </h2>
+                </h3>
               </div>
               <div className="p-2 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
                 <Wallet className="w-4 h-4" />
@@ -499,12 +511,12 @@ export function EarningsDashboard({
             </div>
 
             <div className="my-3">
-              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#231917] tabular-nums">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#111314] tabular-nums">
                 ₹{recapMetrics.weekly_aov}
               </span>
             </div>
 
-            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+            <div className="pt-2 border-t border-[#d8cab6]/70 flex items-center justify-between text-xs text-[#7c4226]">
               <span>Per customer sale</span>
               <Badge variant="blue" label="~1.5kg – 2kg" />
             </div>
@@ -517,12 +529,12 @@ export function EarningsDashboard({
             variant="default"
             elevation="low"
             padding={4}
-            className="bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] space-y-4"
+            className="bg-white border border-[#d8cab6] rounded-[var(--radius-panel)] space-y-4"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-[#A83A2F] uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider">
                     Customer Intelligence
                   </span>
                   <Badge
@@ -531,125 +543,106 @@ export function EarningsDashboard({
                     label="VIP Retention"
                   />
                 </div>
-                <h3 className="font-display font-extrabold text-base sm:text-lg text-[#231917] mt-1">
+                <h2 className="font-display font-extrabold text-base sm:text-lg text-[#111314] mt-1">
                   সেরা খরিদ্দার তালিকা (Best Customers Leaderboard)
-                </h3>
-                <p className="text-xs text-[#665852]">
+                </h2>
+                <p className="text-xs text-[#7c4226]">
                   Recognize and reward regular buyers based on PhonePe UPI payment handles.
                 </p>
               </div>
 
-              {/* Filter Buttons */}
+              {/* Filter Chips */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                <button
-                  type="button"
+                <Chip
+                  active={customerFilter === 'ALL'}
                   onClick={() => setCustomerFilter('ALL')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
-                    customerFilter === 'ALL'
-                      ? 'bg-[#872B22] text-white shadow-xs'
-                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
-                  }`}
                 >
                   All ({bestCustomers.length})
-                </button>
-                <button
-                  type="button"
+                </Chip>
+                <Chip
+                  active={customerFilter === 'VIP'}
                   onClick={() => setCustomerFilter('VIP')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
-                    customerFilter === 'VIP'
-                      ? 'bg-[#872B22] text-white shadow-xs'
-                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
-                  }`}
                 >
                   👑 VIP Regulars
-                </button>
-                <button
-                  type="button"
+                </Chip>
+                <Chip
+                  active={customerFilter === 'FREQUENT'}
                   onClick={() => setCustomerFilter('FREQUENT')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
-                    customerFilter === 'FREQUENT'
-                      ? 'bg-[#872B22] text-white shadow-xs'
-                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
-                  }`}
                 >
                   ⭐ Frequent Buyers
-                </button>
-                <button
-                  type="button"
+                </Chip>
+                <Chip
+                  active={customerFilter === 'HIGH_SPEND'}
                   onClick={() => setCustomerFilter('HIGH_SPEND')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
-                    customerFilter === 'HIGH_SPEND'
-                      ? 'bg-[#872B22] text-white shadow-xs'
-                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
-                  }`}
                 >
                   ₹500+ Spenders
-                </button>
+                </Chip>
               </div>
             </div>
 
             {/* Customer Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCustomers.map((cust, index) => (
-                <div
+                <button
                   key={cust.customer_identifier}
+                  type="button"
                   onClick={() => setSelectedCustomer(cust)}
-                  className={`p-4 rounded-[var(--radius-control)] border transition-all duration-200 hover-lift cursor-pointer space-y-3 ${
+                  className={`w-full text-left p-3 rounded-[var(--radius-control)] border transition-[transform,border-color,box-shadow] duration-180 ease-[var(--ease-out-expo)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 [@media(hover:hover)_and_(pointer:fine)]:hover:shadow-md active:scale-[0.985] cursor-pointer space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40 ${
                     cust.loyalty_tier.includes('VIP')
-                      ? 'bg-amber-50/40 border-amber-300'
-                      : 'bg-[#FAF7F2] border-[#E6DEC8]'
+                      ? 'bg-[#ebd3a2]/25 border-[#e0b81f]/70'
+                      : 'bg-[#FAF7F2] border-[#d8cab6]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#872B22] text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
+                      <div className="w-9 h-9 rounded-full bg-[#6c2b11] text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
                         {cust.customer_name ? cust.customer_name.charAt(0) : 'U'}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-display font-bold text-sm text-[#231917] truncate">
+                        <h3 className="font-display font-bold text-sm text-[#111314] truncate">
                           {cust.customer_name || 'Regular Customer'}
-                        </h4>
-                        <span className="text-[11px] font-mono text-[#665852] truncate block">
+                        </h3>
+                        <span className="text-[11px] font-mono text-[#7c4226] truncate block">
                           {cust.customer_identifier}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-[var(--radius-chip)] bg-white border border-[#E6DEC8] text-[#872B22]">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-[var(--radius-concentric-control)] bg-white border border-[#d8cab6] text-[#6c2b11]">
                       #{index + 1}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#E6DEC8]/60 text-center">
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
-                      <span className="text-[10px] text-[#665852] block">Total Spent</span>
-                      <span className="font-mono font-bold text-xs text-[#872B22] tabular-nums">
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#d8cab6]/70 text-center">
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
+                      <span className="text-[10px] text-[#7c4226] block">Total Spent</span>
+                      <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
                         ₹{cust.total_lifetime_spend.toLocaleString('en-IN')}
                       </span>
                     </div>
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
-                      <span className="text-[10px] text-[#665852] block">Visits</span>
-                      <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
+                      <span className="text-[10px] text-[#7c4226] block">Visits</span>
+                      <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                         {cust.total_visits} orders
                       </span>
                     </div>
-                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
-                      <span className="text-[10px] text-[#665852] block">Avg Ticket</span>
-                      <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]/70">
+                      <span className="text-[10px] text-[#7c4226] block">Avg Ticket</span>
+                      <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                         ₹{cust.average_order_value}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#665852] pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-[#7c4226] pt-1">
                     <span className="truncate">
                       Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit}d ago`}
                     </span>
-                    <span className="text-[#872B22] font-semibold inline-flex items-center gap-0.5">
+                    <span className="text-[#6c2b11] font-semibold inline-flex items-center gap-0.5">
                       <span>History</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </Card>
@@ -661,16 +654,16 @@ export function EarningsDashboard({
             variant="default"
             elevation="low"
             padding={4}
-            className="bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] space-y-4"
+            className="bg-white border border-[#d8cab6] rounded-[var(--radius-panel)] space-y-4"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <span className="text-[11px] font-bold text-[#A83A2F] uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-[#a84222] uppercase tracking-wider block">
                   PhonePe Verified Statements
                 </span>
-                <h3 className="font-display font-extrabold text-base sm:text-lg text-[#231917]">
+                <h2 className="font-display font-extrabold text-base sm:text-lg text-[#111314]">
                   পেমেন্ট হিস্ট্রি ও Bank UTR (UPI Ledger)
-                </h3>
+                </h2>
               </div>
 
               <div className="w-full sm:w-72">
@@ -687,9 +680,9 @@ export function EarningsDashboard({
             </div>
 
             {/* Responsive Table Container */}
-            <div className="overflow-x-auto rounded-[var(--radius-control)] border border-[#E6DEC8]">
+            <div className="overflow-x-auto rounded-[var(--radius-control)] border border-[#d8cab6]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF7F2] border-b border-[#E6DEC8] text-[#665852] font-semibold">
+                <thead className="bg-[#FAF7F2] border-b border-[#d8cab6] text-[#7c4226] font-semibold">
                   <tr>
                     <th className="p-3">Date & Time (তারিখ ও সময়)</th>
                     <th className="p-3">Customer / Payer VPA</th>
@@ -699,17 +692,17 @@ export function EarningsDashboard({
                     <th className="p-3 text-right">Amount (টাকা)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E6DEC8]/60 bg-white">
+                <tbody className="divide-y divide-[#d8cab6]/70 bg-white">
                   {filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-[#665852]">
+                      <td colSpan={6} className="p-6 text-center text-[#7c4226]">
                         No transactions match your search filter.
                       </td>
                     </tr>
                   ) : (
                     filteredPayments.map((p) => (
                       <tr key={p.provider_reference_id} className="hover:bg-[#FAF7F2]/60 transition-colors">
-                        <td className="p-3 font-mono text-[#665852] whitespace-nowrap">
+                        <td className="p-3 font-mono text-[#7c4226] whitespace-nowrap">
                           {new Date(p.paid_at).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -721,29 +714,30 @@ export function EarningsDashboard({
                           })}
                         </td>
                         <td className="p-3">
-                          <strong className="text-[#231917] block">{p.payer_name || 'Walk-in Customer'}</strong>
+                          <strong className="text-[#111314] block">{p.payer_name || 'Walk-in Customer'}</strong>
                           {p.payer_vpa && (
-                            <span className="font-mono text-[11px] text-[#665852] block">
+                            <span className="font-mono text-[11px] text-[#7c4226] block">
                               {p.payer_vpa}
                             </span>
                           )}
                         </td>
                         <td className="p-3">
-                          <div className="inline-flex items-center gap-1.5 p-1 bg-[#FAF7F2] rounded border border-[#E6DEC8]">
-                            <code className="font-mono font-medium text-[11px] text-[#231917]">
+                          <div className="inline-flex items-center gap-1.5 pl-2 pr-1 py-0.5 bg-[#FAF7F2] rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
+                            <code className="font-mono font-medium text-[11px] text-[#111314]">
                               {p.provider_reference_id}
                             </code>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(p.provider_reference_id)}
-                              className="text-[#665852] hover:text-[#872B22] transition-colors cursor-pointer"
+                              className="inline-flex items-center justify-center p-1.5 min-w-[28px] min-h-[28px] rounded-md text-[#7c4226] hover:text-[#6c2b11] hover:bg-[#f5ebd6] transition-[transform,background-color,color] duration-150 ease-[var(--ease-out-expo)] active-press cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a84222]/40"
                               title="Copy Bank UTR"
+                              aria-label={`Copy Bank UTR ${p.provider_reference_id}`}
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
-                        <td className="p-3 text-[#665852]">{p.notes || 'UPI Counter Sale'}</td>
+                        <td className="p-3 text-[#7c4226]">{p.notes || 'UPI Counter Sale'}</td>
                         <td className="p-3">
                           <Badge variant="success" label={p.status} />
                         </td>
@@ -773,7 +767,7 @@ export function EarningsDashboard({
         width={560}
         maxHeight="85dvh"
         padding={0}
-        className="rounded-[var(--radius-panel)] bg-white text-[#231917] border border-[#E6DEC8] shadow-2xl overflow-hidden"
+        className="rounded-[var(--radius-panel)] bg-white text-[#111314] border border-[#d8cab6] shadow-2xl overflow-hidden"
       >
         <DialogHeader
           title="Upload PhonePe Statement CSV"
@@ -784,13 +778,13 @@ export function EarningsDashboard({
               setParsedCsvResult(null);
             }
           }}
-          className="px-5 py-4 border-b border-[#E6DEC8] bg-[#FAF7F2]/80"
+          className="px-5 py-4 border-b border-[#d8cab6] bg-[#FAF7F2]/80"
         />
 
         <div className="p-5 sm:p-6 space-y-4">
-          <p className="text-xs text-[#665852] leading-relaxed">
+          <p className="text-xs text-[#7c4226] leading-relaxed">
             Download your transaction statement from the{' '}
-            <strong className="text-[#231917]">PhonePe for Business Portal</strong> or Business App, and drop the CSV file below.
+            <strong className="text-[#111314]">PhonePe for Business Portal</strong> or Business App, and drop the CSV file below.
           </p>
 
           {/* Drag & Drop Zone */}
@@ -802,10 +796,10 @@ export function EarningsDashboard({
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`p-6 border-2 border-dashed rounded-[var(--radius-panel)] text-center cursor-pointer transition-all duration-150 ${
+            className={`p-6 border-2 border-dashed rounded-[var(--radius-concentric-panel)] text-center cursor-pointer transition-[border-color,background-color] duration-150 ease-[var(--ease-out-expo)] ${
               isDragging
-                ? 'border-[#872B22] bg-[#872B22]/5'
-                : 'border-[#E6DEC8] bg-[#FAF7F2] hover:bg-[#F3EFE6]'
+                ? 'border-[#6c2b11] bg-[#6c2b11]/5'
+                : 'border-[#d8cab6] bg-[#FAF7F2] hover:bg-[#f5ebd6]'
             }`}
           >
             <input
@@ -815,11 +809,11 @@ export function EarningsDashboard({
               style={{ display: 'none' }}
               onChange={handleFileInputChange}
             />
-            <Upload className="w-8 h-8 mx-auto text-[#872B22] mb-2" />
-            <p className="text-xs font-bold text-[#231917]">
+            <Upload className="w-8 h-8 mx-auto text-[#6c2b11] mb-2" />
+            <p className="text-xs font-bold text-[#111314]">
               Click to browse or drag & drop PhonePe CSV file
             </p>
-            <span className="text-[11px] text-[#665852] mt-1 block">
+            <span className="text-[11px] text-[#7c4226] mt-1 block">
               Supports standard PhonePe for Business CSV exports
             </span>
           </div>
@@ -862,17 +856,18 @@ export function EarningsDashboard({
             </div>
           )}
 
-          <div className="pt-3 border-t border-[#E6DEC8] flex items-center justify-end gap-3">
-            <button
+          <div className="pt-3 border-t border-[#d8cab6] flex items-center justify-end gap-3">
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setIsUploadModalOpen(false);
                 setParsedCsvResult(null);
               }}
-              className="px-4 py-2 text-xs font-semibold rounded-[var(--radius-chip)] text-[#665852] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
             >
               Cancel
-            </button>
+            </Button>
             <Button
               variant="primary"
               tone="crimson"
@@ -896,7 +891,7 @@ export function EarningsDashboard({
         width={560}
         maxHeight="85dvh"
         padding={0}
-        className="rounded-[var(--radius-panel)] bg-white text-[#231917] border border-[#E6DEC8] shadow-2xl overflow-hidden"
+        className="rounded-[var(--radius-panel)] bg-white text-[#111314] border border-[#d8cab6] shadow-2xl overflow-hidden"
       >
         <DialogHeader
           title={selectedCustomer?.customer_name || 'Regular Customer'}
@@ -904,54 +899,54 @@ export function EarningsDashboard({
           onOpenChange={(open) => {
             if (!open) setSelectedCustomer(null);
           }}
-          className="px-5 py-4 border-b border-[#E6DEC8] bg-[#FAF7F2]/80"
+          className="px-5 py-4 border-b border-[#d8cab6] bg-[#FAF7F2]/80"
         />
 
         {selectedCustomer && (
           <div className="p-5 sm:p-6 space-y-4">
             {/* Customer Summary Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center p-3 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#E6DEC8]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center p-3 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#d8cab6]">
               <div>
-                <span className="text-[10px] text-[#665852] block">Total Spent</span>
-                <span className="font-mono font-bold text-xs text-[#872B22] tabular-nums">
+                <span className="text-[10px] text-[#7c4226] block">Total Spent</span>
+                <span className="font-mono font-bold text-xs text-[#6c2b11] tabular-nums">
                   ₹{selectedCustomer.total_lifetime_spend.toLocaleString('en-IN')}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#665852] block">Visits</span>
-                <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                <span className="text-[10px] text-[#7c4226] block">Visits</span>
+                <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                   {selectedCustomer.total_visits} orders
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#665852] block">Average Order</span>
-                <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                <span className="text-[10px] text-[#7c4226] block">Average Order</span>
+                <span className="font-mono font-bold text-xs text-[#111314] tabular-nums">
                   ₹{selectedCustomer.average_order_value}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#665852] block">Loyalty Tier</span>
-                <span className="text-xs font-semibold text-[#872B22]">
+                <span className="text-[10px] text-[#7c4226] block">Loyalty Tier</span>
+                <span className="text-xs font-semibold text-[#6c2b11]">
                   {selectedCustomer.loyalty_tier}
                 </span>
               </div>
             </div>
 
             <div>
-              <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#665852] mb-2">
+              <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#7c4226] mb-2">
                 Purchase History from PhonePe Statements
               </h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {selectedCustomer.recent_payments?.map((pay) => (
                   <div
                     key={pay.provider_reference_id}
-                    className="p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8]/80 bg-white flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-[var(--radius-control)] border border-[#d8cab6]/80 bg-white flex items-center justify-between text-xs"
                   >
                     <div>
                       <strong className="text-[#15803D] font-mono tabular-nums block">
                         +₹{pay.amount_rupees.toLocaleString('en-IN')}
                       </strong>
-                      <span className="text-[11px] text-[#665852]">
+                      <span className="text-[11px] text-[#7c4226]">
                         {new Date(pay.paid_at).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
@@ -959,12 +954,12 @@ export function EarningsDashboard({
                         })}
                       </span>
                       {pay.notes && (
-                        <span className="text-[11px] text-[#231917] block font-medium">
+                        <span className="text-[11px] text-[#111314] block font-medium">
                           {pay.notes}
                         </span>
                       )}
                     </div>
-                    <code className="text-[10px] font-mono text-[#665852] bg-[#FAF7F2] px-2 py-1 rounded border border-[#E6DEC8]">
+                    <code className="text-[10px] font-mono text-[#7c4226] bg-[#FAF7F2] px-2 py-1 rounded-[var(--radius-concentric-control)] border border-[#d8cab6]">
                       UTR: {pay.provider_reference_id.slice(-6)}
                     </code>
                   </div>
@@ -972,14 +967,15 @@ export function EarningsDashboard({
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#E6DEC8] flex justify-end">
-              <button
+            <div className="pt-3 border-t border-[#d8cab6] flex justify-end">
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setSelectedCustomer(null)}
-                className="px-4 py-2 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-[#231917] transition-colors cursor-pointer"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         )}

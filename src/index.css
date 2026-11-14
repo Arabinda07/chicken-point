@@ -6,16 +6,18 @@
   --font-mono: "JetBrains Mono", monospace;
   --font-bengali: "Noto Sans Bengali", sans-serif;
 
-  /* Reflections-Style Semantic Color Tokens */
+  /* Wada Sanzo (Option A) Semantic Color Tokens */
   --color-canvas: #FAF7F2;
   --color-surface: #FFFFFF;
-  --color-sandstone: #F3EFE6;
-  --color-border-hairline: #E6DEC8;
-  --color-crimson: #A83A2F;
-  --color-crimson-dark: #872B22;
-  --color-marigold: #D99B26;
-  --color-espresso: #231917;
-  --color-muted: #665852;
+  --color-sandstone: #f5ebd6;
+  --color-ivory-buff: #ebd3a2;
+  --color-border-hairline: #d8cab6;
+  --color-ecru: #c2ae93;
+  --color-crimson: #a84222;
+  --color-crimson-dark: #6c2b11;
+  --color-marigold: #e0b81f;
+  --color-espresso: #111314;
+  --color-muted: #7c4226;
   --color-whatsapp: #15803D;
   --color-whatsapp-hover: #166534;
 
@@ -39,11 +41,11 @@
   --radius-concentric-control: max(0px, calc(var(--radius-control) - 0.375rem));
 
   /* Elevation & Shadows */
-  --shadow-card: 0 4px 20px -4px rgba(35, 25, 23, 0.05), 0 2px 6px -2px rgba(35, 25, 23, 0.03);
-  --shadow-floating: 0 16px 36px -6px rgba(35, 25, 23, 0.12), 0 6px 14px -3px rgba(35, 25, 23, 0.06);
+  --shadow-card: 0 4px 20px -4px rgba(17, 19, 20, 0.05), 0 2px 6px -2px rgba(17, 19, 20, 0.03);
+  --shadow-floating: 0 16px 36px -6px rgba(17, 19, 20, 0.12), 0 6px 14px -3px rgba(17, 19, 20, 0.06);
 
   /* Background Ambient Wash */
-  --page-wash: radial-gradient(ellipse 85% 55% at 50% -5%, rgba(168, 58, 47, 0.06), transparent 75%), #FAF7F2;
+  --page-wash: radial-gradient(ellipse 85% 55% at 50% -5%, rgba(168, 66, 34, 0.06), transparent 75%), #FAF7F2;
 }
 
 @layer base {
@@ -72,32 +74,34 @@
 /* Reflections Surface Recipes */
 .surface-paper {
   background: linear-gradient(145deg, #FFFFFF, #FAF7F2);
-  border: 1px solid #E6DEC8;
+  border: 1px solid var(--color-border-hairline);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-card);
 }
 
 .surface-bezel {
-  border: 1px solid #E6DEC8;
-  box-shadow: 0 1px 2px rgba(35, 25, 23, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--color-border-hairline);
+  box-shadow: 0 1px 2px rgba(17, 19, 20, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .control-surface {
   background: #FFFFFF;
-  border: 1px solid #E6DEC8;
+  border: 1px solid var(--color-border-hairline);
   border-radius: var(--radius-control);
-  transition: all 180ms var(--ease-out-expo);
+  transition: border-color 180ms var(--ease-out-expo), background-color 180ms var(--ease-out-expo);
 }
 
-.control-surface:hover {
-  border-color: rgba(168, 58, 47, 0.35);
-  background: #FAF7F2;
+@media (hover: hover) and (pointer: fine) {
+  .control-surface:hover {
+    border-color: rgba(168, 66, 34, 0.4);
+    background: #FAF7F2;
+  }
 }
 
 .surface-floating {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(230, 222, 200, 0.9);
+  border: 1px solid rgba(216, 202, 182, 0.9);
   box-shadow: var(--shadow-floating);
   border-radius: var(--radius-panel);
 }
@@ -129,19 +133,21 @@
   width: 36px;
   height: 4px;
   border-radius: 999px;
-  background-color: #E6DEC8;
+  background-color: var(--color-border-hairline);
   margin-inline: auto;
   margin-bottom: 0.75rem;
-  transition: background-color 150ms ease;
+  transition: background-color 150ms var(--ease-out-expo);
 }
 
-/* Reduced Motion Compliance */
+/* Reduced Motion Compliance: suppress movement while preserving state-change color/opacity feedback */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html {
     scroll-behavior: auto !important;
+  }
+  *, ::before, ::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
   }
   .hover-lift:hover,
   .active-press:active {
