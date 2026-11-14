@@ -1,4 +1,4 @@
-import {useState, useMemo, useRef, ChangeEvent, DragEvent} from 'react';
+import { useState, useMemo, useRef, ChangeEvent, DragEvent } from 'react';
 import {
   Award,
   Calendar,
@@ -25,6 +25,9 @@ import {
   Users,
   Wallet,
   X,
+  ArrowLeft,
+  LogOut,
+  ExternalLink,
 } from 'lucide-react';
 import {
   BestCustomer,
@@ -36,7 +39,20 @@ import {
   isSupabaseConfigured,
   supabase,
 } from '../lib/supabase';
-import {parsePhonePeCsv, ParseResult} from '../lib/phonepeCsvParser';
+import { parsePhonePeCsv, ParseResult } from '../lib/phonepeCsvParser';
+import {
+  Card,
+  Badge,
+  Banner,
+  Dialog,
+  DialogHeader,
+  TextInput,
+  TabList,
+  Tab,
+  HStack,
+  useToast,
+} from '@astryxdesign/core';
+import { Button } from './ui/Button';
 
 interface EarningsDashboardProps {
   onBackToShop: () => void;
@@ -51,13 +67,13 @@ export function EarningsDashboard({
   onSwitchTab,
   activeTab = 'dashboard',
 }: EarningsDashboardProps) {
+  const toast = useToast();
   const [payments, setPayments] = useState<PhonePeUpiPayment[]>(fallbackShopPayments);
   const [settlements] = useState<Settlement[]>(fallbackSettlements);
   const [searchQuery, setSearchQuery] = useState('');
   const [customerFilter, setCustomerFilter] = useState<'ALL' | 'VIP' | 'FREQUENT' | 'HIGH_SPEND'>('ALL');
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<BestCustomer | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // CSV Upload modal & state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -176,14 +192,10 @@ export function EarningsDashboard({
     );
   }, [payments, searchQuery]);
 
-  function showToast(msg: string) {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  }
-
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
     setCopiedUtr(text);
+    toast({ body: `Bank UTR copied: ${text}` });
     setTimeout(() => setCopiedUtr(null), 2000);
   }
 
@@ -210,7 +222,6 @@ export function EarningsDashboard({
     const file = e.dataTransfer.files?.[0];
     if (file) handleFileRead(file);
   }
-
 
   function confirmImport() {
     if (!parsedCsvResult || parsedCsvResult.transactions.length === 0) return;
@@ -241,9 +252,9 @@ export function EarningsDashboard({
     setPayments((prev) => [...newItems, ...prev]);
     setIsUploadModalOpen(false);
     setParsedCsvResult(null);
-    showToast(
-      `✅ Imported ${newItems.length} new PhonePe UPI transactions (${parsedCsvResult.transactions.length - newItems.length} existing duplicates ignored)`,
-    );
+    toast({
+      body: `Imported ${newItems.length} new PhonePe UPI transactions (${parsedCsvResult.transactions.length - newItems.length} duplicates skipped)`,
+    });
   }
 
   function shareWhatsAppRecap() {
@@ -272,571 +283,707 @@ export function EarningsDashboard({
   }
 
   return (
-    <div className="earnings-dashboard-root">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <aside className="dashboard-toast" role="status" aria-live="polite">
-          <CheckCircle2 size={18} className="toast-icon" />
-          <span>{toastMessage}</span>
-        </aside>
-      )}
-
+    <div className="min-h-screen-dvh flex flex-col bg-[#FAF7F2] text-[#231917]">
       {/* Top Header Bar */}
-      <header className="dashboard-topbar">
-        <div className="dashboard-branding">
-          <div className="branding-title-row">
-            <h1 className="dashboard-title">Bikash Chicken Point</h1>
-            <span className="bengali-title">বিকাশ চিকেন পয়েন্ট</span>
-            <span className="live-badge upi">
-              <QrCode size={14} /> PhonePe UPI Statements
-            </span>
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E6DEC8] transition-shadow">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display font-extrabold text-lg sm:text-xl text-[#872B22]">
+                Bikash Chicken Point
+              </h1>
+              <span className="font-bengali text-xs font-semibold px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#A83A2F]/10 text-[#A83A2F]">
+                বিকাশ চিকেন পয়েন্ট
+              </span>
+              <Badge
+                variant="purple"
+                icon={<QrCode className="w-3.5 h-3.5" />}
+                label="PhonePe Statements"
+              />
+            </div>
+            <p className="text-xs text-[#665852] mt-0.5">
+              Executive Recap & Customer Intelligence Hub · Fuljhore Sabji Market, Durgapur
+            </p>
           </div>
-          <p className="dashboard-subtitle">
-            Executive Recap & Customer Intelligence Hub · ফুলঝোড় সবজি মার্কেট
-          </p>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsUploadModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-control)] bg-[#872B22] text-white hover:bg-[#A83A2F] transition-all hover-lift active-press cursor-pointer shadow-xs"
+              title="Upload downloaded statement CSV from PhonePe Business portal"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Upload CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={shareWhatsAppRecap}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-control)] bg-[#15803D] text-white hover:bg-[#166534] transition-all hover-lift active-press cursor-pointer shadow-xs"
+              title="Send formatted weekly summary to Uncle via WhatsApp"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>WhatsApp Recap</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onBackToShop}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-[#231917] transition-all hover-lift active-press cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Shop</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-[var(--radius-chip)] text-[#665852] hover:text-[#872B22] hover:bg-[#F3EFE6] transition-colors cursor-pointer"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
-        <div className="dashboard-top-actions">
-          <button
-            type="button"
-            className="action-pill primary"
-            onClick={() => setIsUploadModalOpen(true)}
-            title="Upload downloaded statement CSV from PhonePe Business portal"
+        {/* Navigation Tabs using Meta Astryx TabList & Tab */}
+        <div className="max-w-6xl mx-auto px-4 border-t border-[#E6DEC8]/60">
+          <TabList
+            value={activeTab}
+            onChange={(val) => onSwitchTab?.(val as 'dashboard' | 'rates' | 'bookings')}
+            hasDivider={false}
+            size="md"
           >
-            <Upload size={16} />
-            <span>Upload PhonePe CSV</span>
-          </button>
-          <button
-            type="button"
-            className="action-pill share"
-            onClick={shareWhatsAppRecap}
-            title="Send formatted weekly summary to Uncle via WhatsApp"
-          >
-            <Share2 size={16} />
-            <span>WhatsApp Recap for Uncle</span>
-          </button>
-          <button type="button" className="plain-link logout" onClick={onSignOut}>
-            Sign Out
-          </button>
-          <button type="button" className="plain-link" onClick={onBackToShop}>
-            Back to Shop
-          </button>
+            <Tab
+              value="dashboard"
+              label="Recap & Best Customers (সেরা খরিদ্দার)"
+              icon={<Award className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+            <Tab
+              value="rates"
+              label="Counter Rates (রেট পরিবর্তন)"
+              icon={<Layers className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+            <Tab
+              value="bookings"
+              label="Pending Orders (বুকিং তালিকা)"
+              icon={<Clock className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+          </TabList>
         </div>
       </header>
 
-      {/* Secondary Navigation Tabs */}
-      <nav className="dashboard-nav-tabs" aria-label="Dashboard views">
-        <button
-          type="button"
-          className={`nav-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => onSwitchTab?.('dashboard')}
-        >
-          <Award size={16} />
-          <span>Recap & Best Customers</span>
-          <span className="tab-bengali">সেরা খরিদ্দার ও রিক্যাপ</span>
-        </button>
-        <button
-          type="button"
-          className={`nav-tab-btn ${activeTab === 'rates' ? 'active' : ''}`}
-          onClick={() => onSwitchTab?.('rates')}
-        >
-          <Layers size={16} />
-          <span>Counter Rates</span>
-          <span className="tab-bengali">রেট পরিবর্তন</span>
-        </button>
-        <button
-          type="button"
-          className={`nav-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-          onClick={() => onSwitchTab?.('bookings')}
-        >
-          <Clock size={16} />
-          <span>Pending Orders</span>
-          <span className="tab-bengali">বুকিং তালিকা</span>
-        </button>
-      </nav>
+      {/* Main Container */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+        {/* Executive KPI Cards Grid using Meta Astryx Card */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Total UPI Revenue */}
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <span className="text-[11px] font-bold text-purple-800 uppercase tracking-wider block">
+                  PhonePe UPI
+                </span>
+                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                  মোট UPI বিক্রি
+                </h2>
+              </div>
+              <div className="p-2 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                <QrCode className="w-4 h-4" />
+              </div>
+            </div>
 
-      {/* Executive KPI Cards Grid */}
-      <section className="kpi-grid">
-        {/* Card 1: Total UPI Revenue */}
-        <article className="kpi-card phonepe-upi">
-          <div className="kpi-header">
-            <div>
-              <span className="kpi-tag phonepe">PhonePe UPI Collections</span>
-              <h2 className="kpi-title">মোট UPI বিক্রি</h2>
-            </div>
-            <div className="kpi-icon-badge purple">
-              <QrCode size={22} />
-            </div>
-          </div>
-          <div className="kpi-value-row">
-            <span className="kpi-currency">₹</span>
-            <span className="kpi-number">{recapMetrics.total_revenue.toLocaleString('en-IN')}</span>
-          </div>
-          <div className="kpi-footer">
-            <span className="kpi-subtext">{recapMetrics.total_orders} UPI payments verified</span>
-            <span className="kpi-pill phonepe">100% Direct to Bank</span>
-          </div>
-        </article>
-
-        {/* Card 2: Regular Customer Retention */}
-        <article className="kpi-card gross-sales">
-          <div className="kpi-header">
-            <div>
-              <span className="kpi-tag">Customer Loyalty</span>
-              <h2 className="kpi-title">নিয়মিত খরিদ্দার হার</h2>
-            </div>
-            <div className="kpi-icon-badge gold">
-              <Users size={22} />
-            </div>
-          </div>
-          <div className="kpi-value-row">
-            <span className="kpi-number">{recapMetrics.repeat_customer_rate}</span>
-            <span className="kpi-currency">%</span>
-          </div>
-          <div className="kpi-footer">
-            <span className="kpi-subtext">
-              {bestCustomers.filter((c) => c.total_visits > 1).length} repeat weekly buyers
-            </span>
-            <span className="kpi-pill success">High Repeat</span>
-          </div>
-        </article>
-
-        {/* Card 3: Sunday Peak Rush */}
-        <article className="kpi-card Sunday-card">
-          <div className="kpi-header">
-            <div>
-              <span className="kpi-tag">Sunday Peak Share</span>
-              <h2 className="kpi-title">রবিবারের বিক্রি</h2>
-            </div>
-            <div className="kpi-icon-badge red">
-              <Flame size={22} />
-            </div>
-          </div>
-          <div className="kpi-value-row">
-            <span className="kpi-currency">₹</span>
-            <span className="kpi-number">{recapMetrics.sunday_revenue.toLocaleString('en-IN')}</span>
-          </div>
-          <div className="kpi-footer">
-            <span className="kpi-subtext">{recapMetrics.sunday_orders} Sunday morning rush orders</span>
-            <span className="kpi-pill red">Biggest Rush</span>
-          </div>
-        </article>
-
-        {/* Card 4: Avg Order Ticket */}
-        <article className="kpi-card aov-card">
-          <div className="kpi-header">
-            <div>
-              <span className="kpi-tag blue">Average Ticket Size</span>
-              <h2 className="kpi-title">গড় কেনাকাটা</h2>
-            </div>
-            <div className="kpi-icon-badge blue">
-              <Wallet size={22} />
-            </div>
-          </div>
-          <div className="kpi-value-row">
-            <span className="kpi-currency">₹</span>
-            <span className="kpi-number">{recapMetrics.weekly_aov}</span>
-          </div>
-          <div className="kpi-footer">
-            <span className="kpi-subtext">Per customer transaction</span>
-            <span className="kpi-pill blue">~1.5kg – 2kg avg</span>
-          </div>
-        </article>
-      </section>
-
-      {/* SECTION 1: Best Customers Leaderboard (সেরা খরিদ্দার তালিকা) */}
-      <section className="dashboard-panel customer-leaderboard-panel">
-        <div className="leaderboard-header-row">
-          <div>
-            <div className="header-badge-row">
-              <span className="panel-eyebrow">Customer Intelligence</span>
-              <span className="vip-crown-badge">
-                <Crown size={14} /> VIP Retention
+            <div className="my-3">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#872B22] tabular-nums">
+                ₹{recapMetrics.total_revenue.toLocaleString('en-IN')}
               </span>
             </div>
-            <h3 className="panel-title">সেরা খরিদ্দার তালিকা (Best Customers Leaderboard)</h3>
-            <p className="panel-hint">
-              Identified through PhonePe UPI payment handles. Helps your uncle recognize and reward his regular buyers.
-            </p>
-          </div>
 
-          {/* Filter buttons */}
-          <div className="customer-filter-pills">
-            <button
-              type="button"
-              className={`pill-btn ${customerFilter === 'ALL' ? 'active' : ''}`}
-              onClick={() => setCustomerFilter('ALL')}
-            >
-              All ({bestCustomers.length})
-            </button>
-            <button
-              type="button"
-              className={`pill-btn ${customerFilter === 'VIP' ? 'active' : ''}`}
-              onClick={() => setCustomerFilter('VIP')}
-            >
-              👑 VIP Regulars
-            </button>
-            <button
-              type="button"
-              className={`pill-btn ${customerFilter === 'FREQUENT' ? 'active' : ''}`}
-              onClick={() => setCustomerFilter('FREQUENT')}
-            >
-              ⭐ Frequent Buyers
-            </button>
-            <button
-              type="button"
-              className={`pill-btn ${customerFilter === 'HIGH_SPEND' ? 'active' : ''}`}
-              onClick={() => setCustomerFilter('HIGH_SPEND')}
-            >
-              ₹500+ Spenders
-            </button>
-          </div>
-        </div>
+            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+              <span>{recapMetrics.total_orders} verified payments</span>
+              <Badge variant="purple" label="Direct to Bank" />
+            </div>
+          </Card>
 
-        {/* Customer Cards Grid */}
-        <div className="customer-cards-grid">
-          {filteredCustomers.map((cust, index) => (
-            <article
-              key={cust.customer_identifier}
-              className={`customer-card ${cust.loyalty_tier.includes('VIP') ? 'is-vip' : ''}`}
-              onClick={() => setSelectedCustomer(cust)}
-            >
-              <div className="customer-rank-badge">#{index + 1}</div>
-
-              <div className="customer-card-header">
-                <div className="customer-avatar">
-                  {cust.customer_name ? cust.customer_name.charAt(0) : 'U'}
-                </div>
-                <div className="customer-name-box">
-                  <h4 className="customer-name">{cust.customer_name || 'Regular Customer'}</h4>
-                  <span className="customer-vpa">{cust.customer_identifier}</span>
-                </div>
-                <span className={`loyalty-pill ${cust.loyalty_tier.includes('VIP') ? 'vip' : 'frequent'}`}>
-                  {cust.loyalty_tier}
-                </span>
-              </div>
-
-              <div className="customer-card-metrics">
-                <div className="metric-box">
-                  <span className="m-label">Total Spent (মোট)</span>
-                  <span className="m-val highlight">₹{cust.total_lifetime_spend.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="metric-box">
-                  <span className="m-label">Visits (অর্ডার)</span>
-                  <span className="m-val">{cust.total_visits} times</span>
-                </div>
-                <div className="metric-box">
-                  <span className="m-label">Avg / Visit (গড়)</span>
-                  <span className="m-val">₹{cust.average_order_value}</span>
-                </div>
-              </div>
-
-              <div className="customer-card-footer">
-                <span className="last-visit-tag">
-                  Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit} days ago`}
-                </span>
-                <span className="view-orders-link">
-                  Order history <ChevronRight size={14} />
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 2: PhonePe Statements Ledger */}
-      <section className="dashboard-panel payments-ledger-panel">
-        <div className="ledger-header-row">
-          <div>
-            <span className="panel-eyebrow">PhonePe Statement Transactions</span>
-            <h3 className="panel-title">পেমেন্ট হিস্ট্রি ও Bank UTR (UPI Ledger)</h3>
-          </div>
-
-          <div className="search-input-wrapper">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search Bank UTR, Customer, or Note..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="ledger-search-input"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={() => setSearchQuery('')}
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="ledger-table-container">
-          <table className="ledger-table">
-            <thead>
-              <tr>
-                <th>Date & Time (তারিখ ও সময়)</th>
-                <th>Customer / Payer VPA</th>
-                <th>Bank UTR / Reference No</th>
-                <th>Cut Style / Note</th>
-                <th>Status</th>
-                <th className="text-right">Amount (টাকা)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="no-data-cell">
-                    No transactions match your search.
-                  </td>
-                </tr>
-              ) : (
-                filteredPayments.map((p) => (
-                  <tr key={p.provider_reference_id}>
-                    <td className="time-cell">
-                      {new Date(p.paid_at).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                      })}{' '}
-                      ·{' '}
-                      {new Date(p.paid_at).toLocaleTimeString('en-IN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="vpa-cell">
-                      <strong>{p.payer_name || 'Walk-in Customer'}</strong>
-                      {p.payer_vpa && <span className="vpa-subtext">{p.payer_vpa}</span>}
-                    </td>
-                    <td className="utr-cell">
-                      <div className="utr-box">
-                        <code>{p.provider_reference_id}</code>
-                        <button
-                          type="button"
-                          className="copy-utr-btn"
-                          onClick={() => copyToClipboard(p.provider_reference_id)}
-                          title="Copy Bank UTR"
-                        >
-                          <Copy size={13} />
-                          {copiedUtr === p.provider_reference_id && (
-                            <span className="copied-tag">Copied</span>
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="note-cell">{p.notes || 'UPI Counter Sale'}</td>
-                    <td>
-                      <span className="status-pill completed">
-                        <CheckCircle2 size={13} /> {p.status}
-                      </span>
-                    </td>
-                    <td className="text-right amount-cell">
-                      +₹{p.amount_rupees.toLocaleString('en-IN')}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* MODAL 1: PhonePe CSV Upload Modal */}
-      {isUploadModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsUploadModalOpen(false)}>
-          <div
-            className="csv-upload-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-labelledby="upload-modal-title"
+          {/* Card 2: Regular Customer Retention */}
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
           >
-            <div className="modal-header">
-              <div className="modal-title-box">
-                <FileSpreadsheet className="text-phonepe" size={22} />
-                <h3 id="upload-modal-title">Upload PhonePe Statement CSV</h3>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">
+                  Customer Loyalty
+                </span>
+                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                  নিয়মিত খরিদ্দার হার
+                </h2>
               </div>
-              <button
-                type="button"
-                className="close-modal-btn"
-                onClick={() => setIsUploadModalOpen(false)}
-              >
-                ✕
-              </button>
+              <div className="p-2 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                <Users className="w-4 h-4" />
+              </div>
             </div>
 
-            <p className="upload-instruction">
-              Download your daily or weekly transaction statement from the <strong>PhonePe for Business Portal</strong> ([business.phonepe.com](https://business.phonepe.com/)) or PhonePe Business App, and drop the CSV file here.
-            </p>
-
-            {/* Drag and Drop Zone */}
-            <div
-              className={`dropzone-box ${isDragging ? 'is-dragging' : ''}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".csv"
-                style={{display: 'none'}}
-                onChange={handleFileInputChange}
-              />
-              <Upload size={32} className="dropzone-icon" />
-              <p className="dropzone-text">
-                <strong>Click to browse</strong> or drag & drop PhonePe CSV file
-              </p>
-              <span className="dropzone-hint">Supports standard PhonePe for Business CSV exports</span>
+            <div className="my-3">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#231917] tabular-nums">
+                {recapMetrics.repeat_customer_rate}%
+              </span>
             </div>
 
-            {/* Parsed Preview */}
-            {parsedCsvResult && (
-              <div className="csv-preview-container">
-                {parsedCsvResult.success ? (
-                  <div className="parse-success-box">
-                    <div className="parse-kpis">
-                      <div className="parse-stat">
-                        <span className="stat-num">{parsedCsvResult.validCount}</span>
-                        <span className="stat-label">Valid UPI Rows</span>
+            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+              <span>{bestCustomers.filter((c) => c.total_visits > 1).length} repeat weekly buyers</span>
+              <Badge variant="success" label="High Repeat" />
+            </div>
+          </Card>
+
+          {/* Card 3: Sunday Peak Rush */}
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider block">
+                  Sunday Peak Rush
+                </span>
+                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                  রবিবারের বিক্রি
+                </h2>
+              </div>
+              <div className="p-2 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                <Flame className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="my-3">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#872B22] tabular-nums">
+                ₹{recapMetrics.sunday_revenue.toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+              <span>{recapMetrics.sunday_orders} morning rush orders</span>
+              <Badge variant="error" label="Biggest Rush" />
+            </div>
+          </Card>
+
+          {/* Card 4: Avg Order Ticket */}
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] transition-all hover-lift"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <span className="text-[11px] font-bold text-sky-700 uppercase tracking-wider block">
+                  Average Ticket Size
+                </span>
+                <h2 className="font-display font-bold text-sm text-[#231917] mt-0.5">
+                  গড় কেনাকাটা
+                </h2>
+              </div>
+              <div className="p-2 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                <Wallet className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="my-3">
+              <span className="font-mono text-2xl sm:text-3xl font-extrabold text-[#231917] tabular-nums">
+                ₹{recapMetrics.weekly_aov}
+              </span>
+            </div>
+
+            <div className="pt-2 border-t border-[#E6DEC8]/60 flex items-center justify-between text-xs text-[#665852]">
+              <span>Per customer sale</span>
+              <Badge variant="blue" label="~1.5kg – 2kg" />
+            </div>
+          </Card>
+        </section>
+
+        {/* SECTION 1: Best Customers Leaderboard (সেরা খরিদ্দার তালিকা) */}
+        <section className="space-y-4">
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-[#A83A2F] uppercase tracking-wider">
+                    Customer Intelligence
+                  </span>
+                  <Badge
+                    variant="purple"
+                    icon={<Crown className="w-3.5 h-3.5" />}
+                    label="VIP Retention"
+                  />
+                </div>
+                <h3 className="font-display font-extrabold text-base sm:text-lg text-[#231917] mt-1">
+                  সেরা খরিদ্দার তালিকা (Best Customers Leaderboard)
+                </h3>
+                <p className="text-xs text-[#665852]">
+                  Recognize and reward regular buyers based on PhonePe UPI payment handles.
+                </p>
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilter('ALL')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
+                    customerFilter === 'ALL'
+                      ? 'bg-[#872B22] text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
+                  }`}
+                >
+                  All ({bestCustomers.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilter('VIP')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
+                    customerFilter === 'VIP'
+                      ? 'bg-[#872B22] text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
+                  }`}
+                >
+                  👑 VIP Regulars
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilter('FREQUENT')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
+                    customerFilter === 'FREQUENT'
+                      ? 'bg-[#872B22] text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
+                  }`}
+                >
+                  ⭐ Frequent Buyers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerFilter('HIGH_SPEND')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] transition-all cursor-pointer ${
+                    customerFilter === 'HIGH_SPEND'
+                      ? 'bg-[#872B22] text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-[#665852] hover:bg-[#F3EFE6] border border-[#E6DEC8]'
+                  }`}
+                >
+                  ₹500+ Spenders
+                </button>
+              </div>
+            </div>
+
+            {/* Customer Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredCustomers.map((cust, index) => (
+                <div
+                  key={cust.customer_identifier}
+                  onClick={() => setSelectedCustomer(cust)}
+                  className={`p-4 rounded-[var(--radius-control)] border transition-all duration-200 hover-lift cursor-pointer space-y-3 ${
+                    cust.loyalty_tier.includes('VIP')
+                      ? 'bg-amber-50/40 border-amber-300'
+                      : 'bg-[#FAF7F2] border-[#E6DEC8]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-[#872B22] text-white font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-xs">
+                        {cust.customer_name ? cust.customer_name.charAt(0) : 'U'}
                       </div>
-                      <div className="parse-stat">
-                        <span className="stat-num">₹{parsedCsvResult.totalAmountRupees.toLocaleString('en-IN')}</span>
-                        <span className="stat-label">Total Amount</span>
-                      </div>
-                      <div className="parse-stat">
-                        <span className="stat-num">{parsedCsvResult.uniqueCustomersCount}</span>
-                        <span className="stat-label">Customers</span>
+                      <div className="min-w-0">
+                        <h4 className="font-display font-bold text-sm text-[#231917] truncate">
+                          {cust.customer_name || 'Regular Customer'}
+                        </h4>
+                        <span className="text-[11px] font-mono text-[#665852] truncate block">
+                          {cust.customer_identifier}
+                        </span>
                       </div>
                     </div>
-                    <div className="dedup-note">
-                      🔒 <strong>Auto-Deduplication:</strong> Transactions with existing Bank UTRs will be skipped safely without creating duplicate entries.
-                    </div>
-                  </div>
-                ) : (
-                  <div className="parse-error-box">
-                    ⚠️ {parsedCsvResult.error || 'Failed to parse file. Please verify it is a valid PhonePe CSV.'}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="plain-link"
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  setParsedCsvResult(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="primary-cta compact"
-                disabled={!parsedCsvResult?.success}
-                onClick={confirmImport}
-              >
-                Confirm & Import Transactions
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2: Customer Purchase History Drawer */}
-      {selectedCustomer && (
-        <div className="modal-backdrop" onClick={() => setSelectedCustomer(null)}>
-          <div
-            className="customer-drawer-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-labelledby="customer-drawer-title"
-          >
-            <div className="modal-header">
-              <div className="drawer-header-left">
-                <div className="drawer-avatar">
-                  {selectedCustomer.customer_name ? selectedCustomer.customer_name.charAt(0) : 'U'}
-                </div>
-                <div>
-                  <h3 id="customer-drawer-title">
-                    {selectedCustomer.customer_name || 'Regular Customer'}
-                  </h3>
-                  <span className="customer-vpa">{selectedCustomer.customer_identifier}</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="close-modal-btn"
-                onClick={() => setSelectedCustomer(null)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="drawer-summary-strip">
-              <div>
-                <span className="strip-label">Total Lifetime Spend</span>
-                <span className="strip-val highlight">
-                  ₹{selectedCustomer.total_lifetime_spend.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div>
-                <span className="strip-label">Visits</span>
-                <span className="strip-val">{selectedCustomer.total_visits} orders</span>
-              </div>
-              <div>
-                <span className="strip-label">Average Order</span>
-                <span className="strip-val">₹{selectedCustomer.average_order_value}</span>
-              </div>
-              <div>
-                <span className="strip-label">Loyalty Tier</span>
-                <span className="strip-val">{selectedCustomer.loyalty_tier}</span>
-              </div>
-            </div>
-
-            <h4 className="drawer-subheading">Purchase History from PhonePe Statements</h4>
-            <div className="drawer-orders-list">
-              {selectedCustomer.recent_payments?.map((pay) => (
-                <div key={pay.provider_reference_id} className="drawer-order-row">
-                  <div>
-                    <strong>+₹{pay.amount_rupees.toLocaleString('en-IN')}</strong>
-                    <span className="drawer-order-date">
-                      {new Date(pay.paid_at).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-[var(--radius-chip)] bg-white border border-[#E6DEC8] text-[#872B22]">
+                      #{index + 1}
                     </span>
-                    {pay.notes && <span className="drawer-order-note">{pay.notes}</span>}
                   </div>
-                  <div className="drawer-order-utr">
-                    <code>UTR: {pay.provider_reference_id}</code>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#E6DEC8]/60 text-center">
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
+                      <span className="text-[10px] text-[#665852] block">Total Spent</span>
+                      <span className="font-mono font-bold text-xs text-[#872B22] tabular-nums">
+                        ₹{cust.total_lifetime_spend.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
+                      <span className="text-[10px] text-[#665852] block">Visits</span>
+                      <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                        {cust.total_visits} orders
+                      </span>
+                    </div>
+                    <div className="bg-white/80 p-1.5 rounded-[var(--radius-chip)] border border-[#E6DEC8]/60">
+                      <span className="text-[10px] text-[#665852] block">Avg Ticket</span>
+                      <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                        ₹{cust.average_order_value}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-[#665852] pt-1">
+                    <span className="truncate">
+                      Last: {cust.days_since_last_visit === 0 ? 'Today' : `${cust.days_since_last_visit}d ago`}
+                    </span>
+                    <span className="text-[#872B22] font-semibold inline-flex items-center gap-0.5">
+                      <span>History</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
+          </Card>
+        </section>
 
-            <div className="modal-actions">
+        {/* SECTION 2: PhonePe Statements Ledger */}
+        <section className="space-y-4">
+          <Card
+            variant="default"
+            elevation="low"
+            padding={4}
+            className="bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)] space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-bold text-[#A83A2F] uppercase tracking-wider block">
+                  PhonePe Verified Statements
+                </span>
+                <h3 className="font-display font-extrabold text-base sm:text-lg text-[#231917]">
+                  পেমেন্ট হিস্ট্রি ও Bank UTR (UPI Ledger)
+                </h3>
+              </div>
+
+              <div className="w-full sm:w-72">
+                <TextInput
+                  type="search"
+                  label="Search transactions"
+                  isLabelHidden
+                  placeholder="Search Bank UTR, Customer..."
+                  value={searchQuery}
+                  onChange={(val) => setSearchQuery(val)}
+                  width="100%"
+                />
+              </div>
+            </div>
+
+            {/* Responsive Table Container */}
+            <div className="overflow-x-auto rounded-[var(--radius-control)] border border-[#E6DEC8]">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#FAF7F2] border-b border-[#E6DEC8] text-[#665852] font-semibold">
+                  <tr>
+                    <th className="p-3">Date & Time (তারিখ ও সময়)</th>
+                    <th className="p-3">Customer / Payer VPA</th>
+                    <th className="p-3">Bank UTR / Reference</th>
+                    <th className="p-3">Cut Style / Note</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Amount (টাকা)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E6DEC8]/60 bg-white">
+                  {filteredPayments.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-[#665852]">
+                        No transactions match your search filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredPayments.map((p) => (
+                      <tr key={p.provider_reference_id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                        <td className="p-3 font-mono text-[#665852] whitespace-nowrap">
+                          {new Date(p.paid_at).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                          })}{' '}
+                          ·{' '}
+                          {new Date(p.paid_at).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </td>
+                        <td className="p-3">
+                          <strong className="text-[#231917] block">{p.payer_name || 'Walk-in Customer'}</strong>
+                          {p.payer_vpa && (
+                            <span className="font-mono text-[11px] text-[#665852] block">
+                              {p.payer_vpa}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <div className="inline-flex items-center gap-1.5 p-1 bg-[#FAF7F2] rounded border border-[#E6DEC8]">
+                            <code className="font-mono font-medium text-[11px] text-[#231917]">
+                              {p.provider_reference_id}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(p.provider_reference_id)}
+                              className="text-[#665852] hover:text-[#872B22] transition-colors cursor-pointer"
+                              title="Copy Bank UTR"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3 text-[#665852]">{p.notes || 'UPI Counter Sale'}</td>
+                        <td className="p-3">
+                          <Badge variant="success" label={p.status} />
+                        </td>
+                        <td className="p-3 text-right font-mono font-bold text-sm text-[#15803D] tabular-nums">
+                          +₹{p.amount_rupees.toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </section>
+      </main>
+
+      {/* MODAL 1: PhonePe CSV Upload Dialog with Meta Astryx Dialog */}
+      <Dialog
+        isOpen={isUploadModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsUploadModalOpen(false);
+            setParsedCsvResult(null);
+          }
+        }}
+        purpose="form"
+        width={560}
+        maxHeight="85dvh"
+        padding={0}
+        className="rounded-[var(--radius-panel)] bg-white text-[#231917] border border-[#E6DEC8] shadow-2xl overflow-hidden"
+      >
+        <DialogHeader
+          title="Upload PhonePe Statement CSV"
+          subtitle="Download daily/weekly statement from business.phonepe.com and drop here"
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsUploadModalOpen(false);
+              setParsedCsvResult(null);
+            }
+          }}
+          className="px-5 py-4 border-b border-[#E6DEC8] bg-[#FAF7F2]/80"
+        />
+
+        <div className="p-5 sm:p-6 space-y-4">
+          <p className="text-xs text-[#665852] leading-relaxed">
+            Download your transaction statement from the{' '}
+            <strong className="text-[#231917]">PhonePe for Business Portal</strong> or Business App, and drop the CSV file below.
+          </p>
+
+          {/* Drag & Drop Zone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`p-6 border-2 border-dashed rounded-[var(--radius-panel)] text-center cursor-pointer transition-all duration-150 ${
+              isDragging
+                ? 'border-[#872B22] bg-[#872B22]/5'
+                : 'border-[#E6DEC8] bg-[#FAF7F2] hover:bg-[#F3EFE6]'
+            }`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".csv"
+              style={{ display: 'none' }}
+              onChange={handleFileInputChange}
+            />
+            <Upload className="w-8 h-8 mx-auto text-[#872B22] mb-2" />
+            <p className="text-xs font-bold text-[#231917]">
+              Click to browse or drag & drop PhonePe CSV file
+            </p>
+            <span className="text-[11px] text-[#665852] mt-1 block">
+              Supports standard PhonePe for Business CSV exports
+            </span>
+          </div>
+
+          {/* Parsed Preview */}
+          {parsedCsvResult && (
+            <div className="pt-2">
+              {parsedCsvResult.success ? (
+                <div className="p-4 rounded-[var(--radius-control)] bg-emerald-50 border border-emerald-200 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
+                        {parsedCsvResult.validCount}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 block">Valid Rows</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
+                        ₹{parsedCsvResult.totalAmountRupees.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 block">Total Amount</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-sm text-emerald-800 tabular-nums">
+                        {parsedCsvResult.uniqueCustomersCount}
+                      </span>
+                      <span className="text-[10px] text-emerald-700 block">Customers</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-800 border-t border-emerald-200/60 pt-2">
+                    🔒 <strong>Auto-Deduplication:</strong> Transactions with existing Bank UTRs will be skipped safely without creating duplicate entries.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 rounded-[var(--radius-control)] bg-rose-50 border border-rose-200 text-xs text-rose-800">
+                  ⚠️ {parsedCsvResult.error || 'Failed to parse file. Please verify it is a valid PhonePe CSV.'}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="pt-3 border-t border-[#E6DEC8] flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setIsUploadModalOpen(false);
+                setParsedCsvResult(null);
+              }}
+              className="px-4 py-2 text-xs font-semibold rounded-[var(--radius-chip)] text-[#665852] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <Button
+              variant="primary"
+              tone="crimson"
+              size="sm"
+              disabled={!parsedCsvResult?.success}
+              onClick={confirmImport}
+            >
+              Confirm & Import Transactions
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* MODAL 2: Customer Purchase History Dialog with Meta Astryx Dialog */}
+      <Dialog
+        isOpen={!!selectedCustomer}
+        onOpenChange={(open) => {
+          if (!open) setSelectedCustomer(null);
+        }}
+        purpose="info"
+        width={560}
+        maxHeight="85dvh"
+        padding={0}
+        className="rounded-[var(--radius-panel)] bg-white text-[#231917] border border-[#E6DEC8] shadow-2xl overflow-hidden"
+      >
+        <DialogHeader
+          title={selectedCustomer?.customer_name || 'Regular Customer'}
+          subtitle={selectedCustomer?.customer_identifier}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCustomer(null);
+          }}
+          className="px-5 py-4 border-b border-[#E6DEC8] bg-[#FAF7F2]/80"
+        />
+
+        {selectedCustomer && (
+          <div className="p-5 sm:p-6 space-y-4">
+            {/* Customer Summary Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center p-3 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#E6DEC8]">
+              <div>
+                <span className="text-[10px] text-[#665852] block">Total Spent</span>
+                <span className="font-mono font-bold text-xs text-[#872B22] tabular-nums">
+                  ₹{selectedCustomer.total_lifetime_spend.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#665852] block">Visits</span>
+                <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                  {selectedCustomer.total_visits} orders
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#665852] block">Average Order</span>
+                <span className="font-mono font-bold text-xs text-[#231917] tabular-nums">
+                  ₹{selectedCustomer.average_order_value}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#665852] block">Loyalty Tier</span>
+                <span className="text-xs font-semibold text-[#872B22]">
+                  {selectedCustomer.loyalty_tier}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#665852] mb-2">
+                Purchase History from PhonePe Statements
+              </h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {selectedCustomer.recent_payments?.map((pay) => (
+                  <div
+                    key={pay.provider_reference_id}
+                    className="p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8]/80 bg-white flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <strong className="text-[#15803D] font-mono tabular-nums block">
+                        +₹{pay.amount_rupees.toLocaleString('en-IN')}
+                      </strong>
+                      <span className="text-[11px] text-[#665852]">
+                        {new Date(pay.paid_at).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      {pay.notes && (
+                        <span className="text-[11px] text-[#231917] block font-medium">
+                          {pay.notes}
+                        </span>
+                      )}
+                    </div>
+                    <code className="text-[10px] font-mono text-[#665852] bg-[#FAF7F2] px-2 py-1 rounded border border-[#E6DEC8]">
+                      UTR: {pay.provider_reference_id.slice(-6)}
+                    </code>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#E6DEC8] flex justify-end">
               <button
                 type="button"
-                className="plain-link"
                 onClick={() => setSelectedCustomer(null)}
+                className="px-4 py-2 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#F3EFE6] hover:bg-[#E6DEC8] text-[#231917] transition-colors cursor-pointer"
               >
                 Close
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Dialog>
     </div>
   );
 }

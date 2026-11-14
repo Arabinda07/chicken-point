@@ -20,7 +20,8 @@ import {
   LayoutDashboard,
   Store,
   Info,
-  Scale
+  Scale,
+  Copy
 } from 'lucide-react';
 import { siteData, fallbackProducts, cutStyleOptions, weightOptions, pickupOptions } from './data';
 import type { Product, CutStyle } from './lib/supabase';
@@ -29,12 +30,25 @@ import { Button } from './components/ui/Button';
 import { Chip } from './components/ui/Chip';
 import { Surface } from './components/ui/Surface';
 import { ModalSheet } from './components/ui/ModalSheet';
+import {
+  Card,
+  Badge,
+  Banner,
+  StatusDot,
+  TabList,
+  Tab,
+  HStack,
+  TextInput,
+  CheckboxInput,
+  useToast,
+} from '@astryxdesign/core';
 
 import logoUrl from '../assets/logo.jpeg';
 import paymentQrUrl from '../assets/QR1.png';
 import googleReviewQrUrl from '../assets/Shop_GoogleQR.png';
 
 export default function App() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'shop' | 'qr' | 'bulk' | 'admin'>('shop');
   const [selectedProduct, setSelectedProduct] = useState<Product>(fallbackProducts[0]);
   const [selectedCut, setSelectedCut] = useState<CutStyle>('curry');
@@ -47,6 +61,14 @@ export default function App() {
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
   const [orderConfirmed, setOrderConfirmed] = useState<{ code: string; message: string } | null>(null);
   const [ariaAnnouncement, setAriaAnnouncement] = useState<string>('');
+  const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
+
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(siteData.upiId);
+    setCopiedUpi(true);
+    toast({ body: `UPI ID ${siteData.upiId} copied to clipboard!` });
+    setTimeout(() => setCopiedUpi(false), 2000);
+  };
 
   // Shop Open / Closed Live Status based on Asia/Kolkata
   const isShopOpen = useMemo(() => {
@@ -94,6 +116,15 @@ export default function App() {
   // Handle Order Submit & WhatsApp Redirect
   const handleSubmitOrder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!customerName.trim()) {
+      toast({ body: 'Please enter your name for counter pickup.' });
+      return;
+    }
+    if (!/^\d{10}$/.test(customerPhone.trim())) {
+      toast({ body: 'Please enter a valid 10-digit mobile number.' });
+      return;
+    }
 
     const orderNum = Math.floor(1000 + Math.random() * 9000);
     const orderCode = `BCP-${orderNum}`;
@@ -182,18 +213,21 @@ Please confirm availability and keep it packed for pickup!`;
             </div>
           </div>
 
-          {/* Header Action Buttons */}
+          {/* Header Action Buttons & Status */}
           <div className="flex items-center gap-2">
-            <span
-              className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-[var(--radius-chip)] ${
-                isShopOpen
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${isShopOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-              {isShopOpen ? 'Counter Open (8 AM - 9 PM)' : 'Pre-orders Accepted'}
-            </span>
+            <div className="hidden sm:inline-flex items-center">
+              <Badge
+                variant={isShopOpen ? 'success' : 'neutral'}
+                icon={
+                  <StatusDot
+                    variant={isShopOpen ? 'success' : 'warning'}
+                    label={isShopOpen ? 'Counter Open' : 'Pre-orders'}
+                    isPulsing={isShopOpen}
+                  />
+                }
+                label={isShopOpen ? 'Counter Open (8 AM - 9 PM)' : 'Pre-orders Accepted'}
+              />
+            </div>
 
             <a
               href={`tel:${siteData.phone}`}
@@ -215,42 +249,31 @@ Please confirm availability and keep it packed for pickup!`;
           </div>
         </div>
 
-        {/* Navigation Tabs with Reflections Spring Active State */}
-        <nav className="max-w-5xl mx-auto px-4 flex gap-4 border-t border-[#E6DEC8]/60 text-xs font-medium">
-          <button
-            onClick={() => setActiveTab('shop')}
-            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
-              activeTab === 'shop'
-                ? 'border-[#A83A2F] text-[#872B22] font-bold'
-                : 'border-transparent text-[#665852] hover:text-[#231917]'
-            }`}
+        {/* Navigation Tabs using Meta Astryx TabList & Tab */}
+        <div className="max-w-5xl mx-auto px-4 border-t border-[#E6DEC8]/60">
+          <TabList
+            value={activeTab}
+            onChange={(val) => setActiveTab(val as 'shop' | 'qr' | 'bulk')}
+            hasDivider={false}
+            size="md"
           >
-            <Utensils className="w-3.5 h-3.5" />
-            Menu & Pre-Book
-          </button>
-          <button
-            onClick={() => setActiveTab('qr')}
-            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
-              activeTab === 'qr'
-                ? 'border-[#A83A2F] text-[#872B22] font-bold'
-                : 'border-transparent text-[#665852] hover:text-[#231917]'
-            }`}
-          >
-            <QrCode className="w-3.5 h-3.5" />
-            Counter QR & Location
-          </button>
-          <button
-            onClick={() => setActiveTab('bulk')}
-            className={`py-2.5 border-b-2 flex items-center gap-1.5 transition-all ease-out-expo ${
-              activeTab === 'bulk'
-                ? 'border-[#A83A2F] text-[#872B22] font-bold'
-                : 'border-transparent text-[#665852] hover:text-[#231917]'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Bulk & B2B Orders
-          </button>
-        </nav>
+            <Tab
+              value="shop"
+              label="Menu & Pre-Book"
+              icon={<Utensils className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+            <Tab
+              value="qr"
+              label="Counter QR & Location"
+              icon={<QrCode className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+            <Tab
+              value="bulk"
+              label="Bulk & B2B Orders"
+              icon={<FileText className="w-3.5 h-3.5 text-[#872B22]" />}
+            />
+          </TabList>
+        </div>
       </header>
 
       {/* Main Content Container */}
@@ -312,20 +335,17 @@ Please confirm availability and keep it packed for pickup!`;
               />
             </section>
 
-            {/* Daily Counter Rate Transparency Notice */}
-            <Surface variant="bezel" className="p-4 flex items-start gap-3.5 bg-[#FAF7F2]">
-              <Info className="w-5 h-5 text-[#A83A2F] flex-shrink-0 mt-0.5" />
-              <div className="text-xs sm:text-sm text-[#231917] space-y-1">
-                <p className="font-bold text-[#872B22]">
-                  Live Counter Rate Transparency Notice / প্রতিদিনের দর বিজ্ঞপ্তি:
-                </p>
-                <p className="text-[#665852] leading-relaxed">
-                  Prices update daily based on local market rates. To guarantee accuracy, please confirm the final weight and amount at the shop counter upon walk-in pickup before making your UPI/cash payment.
-                </p>
-              </div>
-            </Surface>
+            {/* Daily Counter Rate Transparency Notice with Meta Astryx Banner */}
+            <Banner
+              status="info"
+              title="Live Counter Rate Transparency Notice / প্রতিদিনের দর বিজ্ঞপ্তি:"
+              description="Prices update daily based on local market rates. To guarantee accuracy, please confirm the final weight and amount at the shop counter upon walk-in pickup before making your UPI/cash payment."
+              collapsible={false}
+              elevation="none"
+              className="border border-[#E6DEC8] rounded-[var(--radius-panel)]"
+            />
 
-            {/* Product Cards using CSS Container Query & Reflections Surface */}
+            {/* Product Cards using Meta Astryx Card & Badge */}
             <section className="space-y-4">
               <div className="flex items-baseline justify-between">
                 <div>
@@ -336,9 +356,10 @@ Please confirm availability and keep it packed for pickup!`;
                     Select any cut to customize weight and reserve for counter pickup
                   </p>
                 </div>
-                <span className="text-xs font-mono font-medium text-[#665852] bg-[#F3EFE6] px-2.5 py-1 rounded-[var(--radius-chip)] border border-[#E6DEC8]">
-                  {fallbackProducts.filter(p => p.is_available).length} cuts ready
-                </span>
+                <Badge
+                  variant="neutral"
+                  label={`${fallbackProducts.filter(p => p.is_available).length} cuts ready`}
+                />
               </div>
 
               {/* Product Grid Container */}
@@ -346,9 +367,12 @@ Please confirm availability and keep it packed for pickup!`;
                 {fallbackProducts.map(product => {
                   const details = siteData.menuDetails[product.id as keyof typeof siteData.menuDetails];
                   return (
-                    <article
+                    <Card
                       key={product.id}
-                      className="product-card surface-paper p-5 flex flex-col justify-between transition-all duration-200 hover-lift"
+                      variant="default"
+                      elevation="low"
+                      padding={4}
+                      className="product-card flex flex-col justify-between transition-all duration-200 hover-lift bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]"
                     >
                       <div className="space-y-3">
                         <div className="flex items-start justify-between gap-2">
@@ -360,15 +384,10 @@ Please confirm availability and keep it packed for pickup!`;
                               {product.name_bengali}
                             </p>
                           </div>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-[var(--radius-chip)] uppercase tracking-wider ${
-                              product.is_available
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                : 'bg-stone-100 text-stone-500 border border-stone-200'
-                            }`}
-                          >
-                            {product.is_available ? 'Available' : 'Check Counter'}
-                          </span>
+                          <Badge
+                            variant={product.is_available ? 'success' : 'neutral'}
+                            label={product.is_available ? 'Available' : 'Check Counter'}
+                          />
                         </div>
 
                         {details && (
@@ -397,14 +416,14 @@ Please confirm availability and keep it packed for pickup!`;
                           <ChevronRight className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                    </article>
+                    </Card>
                   );
                 })}
               </div>
             </section>
 
-            {/* How Walk-in Pickup Works */}
-            <Surface variant="paper" className="p-6 space-y-4">
+            {/* How Walk-in Pickup Works with Meta Astryx Card */}
+            <Card variant="default" elevation="low" padding={4} className="space-y-4 bg-white/90 border border-[#E6DEC8] rounded-[var(--radius-panel)]">
               <h2 className="font-display text-lg sm:text-xl font-bold text-[#231917]">
                 How Pre-Booked Walk-in Pickup Works
               </h2>
@@ -423,9 +442,9 @@ Please confirm availability and keep it packed for pickup!`;
                   </div>
                 ))}
               </div>
-            </Surface>
+            </Card>
 
-            {/* FAQs in English & Bengali */}
+            {/* FAQs in English & Bengali with Meta Astryx Card & Badge */}
             <section className="space-y-4">
               <div>
                 <span className="text-xs font-bold text-[#A83A2F] uppercase tracking-wider">
@@ -438,10 +457,8 @@ Please confirm availability and keep it packed for pickup!`;
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {siteData.faqs.map(faq => (
-                  <Surface key={faq.id} variant="paper" className="p-4 space-y-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-[var(--radius-chip)] bg-[#F3EFE6] text-[#872B22] font-bold">
-                      {faq.tag}
-                    </span>
+                  <Card key={faq.id} variant="default" elevation="low" padding={4} className="space-y-2 bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]">
+                    <Badge variant="neutral" label={faq.tag} />
                     <h3 className="font-bold text-sm text-[#231917]">
                       {faq.question}
                     </h3>
@@ -454,7 +471,7 @@ Please confirm availability and keep it packed for pickup!`;
                     <p className="font-bengali text-xs text-[#665852]">
                       {faq.answerBengali}
                     </p>
-                  </Surface>
+                  </Card>
                 ))}
               </div>
             </section>
@@ -474,8 +491,8 @@ Please confirm availability and keep it packed for pickup!`;
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* PhonePe UPI Standee QR */}
-              <Surface variant="paper" className="p-6 text-center space-y-4">
+              {/* PhonePe UPI Standee QR with Meta Astryx Card */}
+              <Card variant="default" elevation="low" padding={4} className="text-center space-y-4 bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]">
                 <div className="inline-flex p-2.5 rounded-full bg-[#15803D]/10 text-[#15803D]">
                   <QrCode className="w-8 h-8" />
                 </div>
@@ -496,16 +513,34 @@ Please confirm availability and keep it packed for pickup!`;
                     height="220"
                   />
                 </div>
-                <div className="text-xs text-[#665852] space-y-1">
-                  <p className="font-mono font-medium">UPI ID: {siteData.upiId}</p>
-                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-[var(--radius-chip)] border border-amber-200">
-                    ⚠️ Pay only after the final weight is confirmed on the shop weighing scale.
-                  </p>
+                <div className="text-xs text-[#665852] space-y-3">
+                  <div className="flex items-center justify-between gap-2 p-2.5 bg-[#FAF7F2] rounded-[var(--radius-control)] border border-[#E6DEC8]">
+                    <div className="text-left">
+                      <span className="text-[10px] text-[#665852] block uppercase tracking-wider font-semibold">PhonePe UPI ID</span>
+                      <code className="font-mono font-bold text-xs text-[#231917] select-all">{siteData.upiId}</code>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyUpiId}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-[var(--radius-chip)] bg-[#872B22] text-white hover:bg-[#A83A2F] transition-all hover-lift active-press cursor-pointer"
+                      title="Copy UPI ID"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <Banner
+                    status="warning"
+                    title="Counter Weight Confirmation"
+                    description="Pay only after the final weight is confirmed on the shop weighing scale."
+                    collapsible={false}
+                    className="text-left text-xs"
+                  />
                 </div>
-              </Surface>
+              </Card>
 
-              {/* Google Business Profile & Reviews */}
-              <Surface variant="paper" className="p-6 text-center space-y-4 flex flex-col justify-between">
+              {/* Google Business Profile & Reviews with Meta Astryx Card */}
+              <Card variant="default" elevation="low" padding={4} className="text-center space-y-4 flex flex-col justify-between bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]">
                 <div className="space-y-4">
                   <div className="inline-flex p-2.5 rounded-full bg-[#A83A2F]/10 text-[#A83A2F]">
                     <MapPin className="w-8 h-8" />
@@ -540,14 +575,14 @@ Please confirm availability and keep it packed for pickup!`;
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
-              </Surface>
+              </Card>
             </div>
 
             {/* Shop Details & Udyam Registration */}
-            <div className="bg-[#FAF7F2] border border-[#E6DEC8] rounded-[var(--radius-control)] p-4 text-xs text-[#665852] flex flex-wrap items-center justify-between gap-3">
-              <div>
+            <div className="bg-white border border-[#E6DEC8] rounded-[var(--radius-control)] p-4 text-xs text-[#665852] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-2">
                 <span className="font-semibold text-[#231917]">MSME Registration:</span>{' '}
-                <span className="font-mono">{siteData.udyamRegistrationNumber}</span>
+                <Badge variant="neutral" label={siteData.udyamRegistrationNumber} />
               </div>
               <div>
                 <span className="font-semibold text-[#231917]">Counter Timing:</span>{' '}
@@ -575,10 +610,13 @@ Please confirm availability and keep it packed for pickup!`;
               </p>
             </div>
 
-            <Surface variant="paper" className="p-6 space-y-4">
-              <h2 className="font-display text-base font-bold text-[#231917]">
-                Wholesale & Commercial Invoicing Benefits
-              </h2>
+            <Card variant="default" elevation="low" padding={4} className="space-y-4 bg-white border border-[#E6DEC8] rounded-[var(--radius-panel)]">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-base font-bold text-[#231917]">
+                  Wholesale & Commercial Invoicing Benefits
+                </h2>
+                <Badge variant="purple" label="B2B Wholesale" />
+              </div>
               <ul className="text-xs text-[#665852] space-y-2.5">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
@@ -605,7 +643,7 @@ Please confirm availability and keep it packed for pickup!`;
                   Connect for Bulk Rates on WhatsApp
                 </a>
               </div>
-            </Surface>
+            </Card>
           </div>
         )}
       </main>
@@ -750,91 +788,55 @@ Please confirm availability and keep it packed for pickup!`;
               </div>
             </div>
 
-            {/* Customer Inputs with :user-invalid and :user-valid rules */}
+            {/* Customer Inputs with Astryx TextInput & CheckboxInput */}
             <div className="space-y-3 pt-2 border-t border-[#E6DEC8]">
-              {/* Name Field */}
-              <div className="field space-y-1">
-                <label htmlFor="customer-name" className="text-xs font-bold text-[#231917] flex justify-between">
-                  <span>Your Name (নাম)</span>
-                  <span className="text-[11px] text-[#665852] font-normal">Required</span>
-                </label>
-                <span id="name-hint" className="text-[11px] text-[#665852] block">
-                  Enter the name for counter pickup announcement
-                </span>
-                <input
-                  type="text"
-                  id="customer-name"
-                  name="name"
-                  required
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="e.g. Subrata / Anirban"
-                  autoComplete="name"
-                  aria-describedby="name-hint"
-                  data-error="name-error"
-                  className="w-full text-xs p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#A83A2F] outline-none font-medium"
-                />
-                <div id="name-error" className="error-msg items-center gap-1 text-[11px] text-red-600 mt-1">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Please enter your name for counter pickup.</span>
-                </div>
-              </div>
+              <TextInput
+                label="Your Name (নাম)"
+                description="Enter the name for counter pickup announcement"
+                isRequired
+                value={customerName}
+                onChange={(val) => setCustomerName(val)}
+                placeholder="e.g. Subrata / Anirban"
+                autoComplete="name"
+                width="100%"
+              />
 
-              {/* Phone Field */}
-              <div className="field space-y-1">
-                <label htmlFor="customer-phone" className="text-xs font-bold text-[#231917] flex justify-between">
-                  <span>10-Digit Mobile (ফোন নম্বর)</span>
-                  <span className="text-[11px] text-[#665852] font-normal">Required</span>
-                </label>
-                <span id="phone-hint" className="text-[11px] text-[#665852] block">
-                  Format: 10 digits without +91 (e.g. 9635021694)
-                </span>
-                <input
-                  type="tel"
-                  id="customer-phone"
-                  name="phone"
-                  required
-                  pattern="[0-9]{10}"
-                  inputMode="tel"
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                  placeholder="9635021694"
-                  autoComplete="tel"
-                  aria-describedby="phone-hint"
-                  data-error="phone-error"
-                  className="w-full text-xs p-2.5 rounded-[var(--radius-control)] border border-[#E6DEC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#A83A2F] outline-none font-mono font-medium"
-                />
-                <div id="phone-error" className="error-msg items-center gap-1 text-[11px] text-red-600 mt-1">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Please enter a valid 10-digit mobile number.</span>
-                </div>
-              </div>
+              <TextInput
+                type="tel"
+                label="10-Digit Mobile (ফোন নম্বর)"
+                description="Format: 10 digits without +91 (e.g. 9635021694)"
+                isRequired
+                value={customerPhone}
+                onChange={(val) => {
+                  const cleaned = val.replace(/\D/g, '').slice(0, 10);
+                  setCustomerPhone(cleaned);
+                }}
+                placeholder="9635021694"
+                autoComplete="tel"
+                width="100%"
+              />
 
-              {/* Invoice Request Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={requestInvoice}
-                  onChange={e => setRequestInvoice(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#A83A2F] focus:ring-[#A83A2F]"
+              <div className="pt-1">
+                <CheckboxInput
+                  label={`${siteData.booking.invoiceLabel} (${siteData.booking.invoiceLabelBengali})`}
+                  description="GST-compliant business invoice generated for tax accounting"
+                  value={requestInvoice}
+                  onChange={(checked) => setRequestInvoice(checked)}
                 />
-                <span className="text-xs text-[#231917] font-medium">
-                  {siteData.booking.invoiceLabel} ({siteData.booking.invoiceLabelBengali})
-                </span>
-              </label>
+              </div>
             </div>
 
-            {/* Price Estimate Summary */}
-            <div className="p-3.5 rounded-[var(--radius-control)] bg-[#FAF7F2] border border-[#E6DEC8] flex items-center justify-between text-xs">
+            {/* Price Estimate Summary with Meta Astryx Card */}
+            <Card variant="default" elevation="none" padding={3} className="bg-[#FAF7F2] border border-[#E6DEC8] rounded-[var(--radius-control)] flex items-center justify-between text-xs">
               <div>
                 <span className="text-[#665852] block font-medium">Estimated Total ({effectiveWeight}kg)</span>
                 <span className="font-extrabold font-mono text-base text-[#872B22] tabular-nums">~₹{estimatedPrice}</span>
               </div>
-              <div className="text-right text-[11px] text-[#665852]">
-                <span className="font-medium">Pay at Counter</span>
-                <p className="text-emerald-700 font-bold">No advance payment</p>
+              <div className="text-right text-[11px] text-[#665852] space-y-0.5">
+                <Badge variant="success" label="No advance payment" />
+                <p className="text-[10px] text-[#665852]">Pay at counter scale</p>
               </div>
-            </div>
+            </Card>
 
             {/* Submit Button */}
             <div className="pt-2">
